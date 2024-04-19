@@ -60,7 +60,7 @@ class BitacoraMantenimiento:
         
         self.root = root
         self.root.title("Bitácora de Mantenimiento")
-        self.root.iconbitmap("logo4.ico")
+     
         # Crear una variable de control para el contador
 
         
@@ -685,6 +685,7 @@ class BitacoraMantenimiento:
         self.limpiar_campos()
         self.numero_guardado += 1
         self.guardar_numero(self.numero_guardado)
+        self.contador_label.config(text=f"{self.numero_guardado}") 
         
        
     
