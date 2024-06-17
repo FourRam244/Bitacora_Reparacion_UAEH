@@ -1,19 +1,29 @@
 import tkinter as tk
 from PIL import ImageTk, Image
 import subprocess
+import sys
 
+def abrir_menu_principal():
+    root.deiconify()  # Mostrar la ventana principal
 
 def alta():
-    subprocess.run(["python", "Bitacora1.py"])
+    root.withdraw()  # Ocultar la ventana principal
+    subprocess.run(["python", "Bitacora1.py"], check=True)
+    abrir_menu_principal()
 
 def consulta():
-    # Coloca aquí el código para la consulta
-    subprocess.run(["python", "Bitacora2.py"])
-    pass
+    root.withdraw()  # Ocultar la ventana principal
+    subprocess.run(["python", "Bitacora2.py"], check=True)
+    abrir_menu_principal()
 
 def finalizar():
-    # Coloca aquí el código para finalizar la aplicación
-    subprocess.run(["python", "Bitacora.py"])
+    root.withdraw()  # Ocultar la ventana principal
+    subprocess.run(["python", "Bitacora.py"], check=True)
+    abrir_menu_principal()
+
+def cerrar_aplicacion():
+    root.destroy()
+    sys.exit()
 
 # Crear la ventana principal
 root = tk.Tk()
@@ -25,6 +35,7 @@ image1 = image1.resize((200, 100))
 image1 = ImageTk.PhotoImage(image1)
 
 image2 = Image.open("./img/logo2.png")
+
 image2 = image2.resize((200, 100))
 image2 = ImageTk.PhotoImage(image2)
 
@@ -47,7 +58,8 @@ boton_consulta.pack(pady=10)
 boton_finalizar = crear_boton("Finalizar", finalizar)
 boton_finalizar.pack(pady=10)
 
-
+# Asignar la función de abrir_menu_principal al evento de cierre de las ventanas de bitácora
+root.protocol("WM_DELETE_WINDOW", cerrar_aplicacion)
 
 # Ejecutar la aplicación
 root.mainloop()

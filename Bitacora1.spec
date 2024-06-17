@@ -2,12 +2,12 @@
 
 
 a = Analysis(
-    ['menu.py'],
+    ['Bitacora1.py'],
     pathex=[],
     binaries=[],
     datas=[],
     hiddenimports=['PIL.Image', 'PIL.ImageTk', 'babel.numbers'],
-    hookspath=['hooks'],
+    hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='menu',
+    name='Bitacora1',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

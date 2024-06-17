@@ -1,5 +1,5 @@
 # Importación de módulos para el manejo de imágenes
-from PIL import Image, ImageTk  # Para trabajar con imágenes en Tkinter
+from PIL import Image, ImageTk, ImageWin  # Para trabajar con imágenes en Tkinter
 
 # Importación del módulo tkinter para la creación de la interfaz gráfica
 import tkinter as tk
@@ -47,7 +47,7 @@ class BitacoraMantenimiento:
         self.root = root
         self.root.title("Bitácora de Mantenimiento")
         
-        
+       
         # Bloquear la opción de maximizar la ventana principal
         self.root.resizable(False, False)
       
@@ -78,7 +78,7 @@ class BitacoraMantenimiento:
 
     def add_content(self):
         
-        #self.contador = tk.IntVar(value=2)
+        
         # Intentar cargar el número guardado desde el archivo
         self.numero_guardado = self.cargar_numero()
         #self.generar_codigo_barras(str(self.numero_guardado))
@@ -130,10 +130,13 @@ class BitacoraMantenimiento:
         self.telefono_responsable_entry = tk.Entry(self.frame)
         self.telefono_responsable_entry.grid(row=4, column=1)
         
+        
+        
         tk.Label(self.frame, text="Correo:").grid(row=3, column=2, sticky="e")
         self.correo_entry = tk.Entry(self.frame)
         self.correo_entry.grid(row=3, column=3)
-        
+
+                
         tk.Label(self.frame, text="Área:").grid(row=4, column=2, sticky="e")
         self.area_responsable_entry = tk.Entry(self.frame)
         self.area_responsable_entry.grid(row=4, column=3)
@@ -317,10 +320,23 @@ class BitacoraMantenimiento:
         self.responsable_taller_dropdown = tk.OptionMenu(self.frame, self.responsable_taller_var, *responsable_taller_options)
         self.responsable_taller_dropdown.grid(row=32, column=1, columnspan=2, sticky="w")
         
-        # Cajas de texto para Responsable equipo Recepción y Firma de conformidad
-        tk.Label(self.frame, text="Responsable equipo Recepción:").grid(row=32, column=2, sticky="e")
+        
+        
+        # Cajas de texto para Responsable equipo Recepción
+        
+        t2=tk.Label(self.frame, text="¿Recoge la misma persona?").grid(row=32, column=2, sticky="w")
+        self.recep_var = tk.StringVar()
+        recep_options = ["Si", "No"]
+        self.recep_dropdown = tk.OptionMenu(self.frame, self.recep_var, *recep_options,command=self.toggle_recibir)
+        self.recep_dropdown.grid(row=33, column=2, columnspan=2, sticky="w")
+        
+        
+        tk.Label(self.frame, text="Responsable equipo Recepción:").grid(row=33, column=0, sticky="e")
         self.responsable_recepcion_entry = tk.Entry(self.frame)
-        self.responsable_recepcion_entry.grid(row=32, column=3, columnspan=2, sticky="w")
+        self.responsable_recepcion_entry.grid(row=33, column=1, columnspan=2, sticky="w")
+        self.responsable_recepcion_entry.config(state="disabled")
+        
+
        
         # Definir la fila para los botones
         fila_botones = 34
@@ -329,43 +345,37 @@ class BitacoraMantenimiento:
         self.frame.grid_columnconfigure((0, 1, 2, 3, 4, 5, 6), weight=1, uniform="equal")
         
         # Botón para generar gráficos
-        self.graficos_button = tk.Button(self.frame, text="Generar Gráficas", command=self.generar_graficas)
-        self.graficos_button.grid(row=fila_botones, column=0, padx=3, pady=10, sticky="ew")
+        #self.graficos_button = tk.Button(self.frame, text="Generar Gráficas", command=self.generar_graficas)
+        self.estadisticas_button = tk.Button(self.frame, text="Estadísticas", command=self.abrir_ventana_estadisticas)
+        self.estadisticas_button.grid(row=fila_botones, column=0, padx=3, pady=10, sticky="ew")
         
         # Botón para guardar
-        self.guardar_button = tk.Button(self.frame, text="Guardar", command=lambda: self.guardar_bitacora())
+        self.guardar_button = tk.Button(self.frame, text="Guardar en Excel", command=lambda: self.guardar_bitacora())
         self.guardar_button.grid(row=fila_botones, column=1, padx=3, pady=10, sticky="ew")
         
         # Botón para guardar progreso
         self.guardar_p_button = tk.Button(self.frame, text="Guardar Progreso", command=lambda: self.guardar_datos())
         self.guardar_p_button.grid(row=fila_botones, column=2, padx=3, pady=10, sticky="ew")
-        
-        # Botón para cargar proceso
-        self.abrir_button = tk.Button(self.frame, text="Cargar Proceso", command=lambda: self.cargar_datos())
-        self.abrir_button.grid(row=fila_botones, column=3, padx=3, pady=10, sticky="ew")
-        
-        # Botón para abrir el archivo de Excel
-        self.abrir_excel_button = tk.Button(self.frame, text="Abrir Excel", command=self.abrir_excel)
-        self.abrir_excel_button.grid(row=35, column=0, padx=3, pady=10, sticky="ew")
-        
-        # Botón para abrir PDF
-        self.open_button = tk.Button(self.frame, text="Abrir PDF", command=self.open_pdf)
-        self.open_button.grid(row=35, column=1, padx=3, pady=10, sticky="ew")
-        
+
+               
         # Botón para generar ticket
         self.generar_ticket_button = tk.Button(self.frame, text="Generar Ticket", command=lambda: self.generar_ticket())
-        self.generar_ticket_button.grid(row=35, column=2, padx=3, pady=10, sticky="ew")
+        self.generar_ticket_button.grid(row=35, column=1, padx=3, pady=10, sticky="ew")
         # Botón para generar ticket
         self.correo_button = tk.Button(self.frame, text="Mandar Correo", command=self.mandar_correo)
-        self.correo_button.grid(row=35, column=3, padx=3, pady=10, sticky="ew")
+        self.correo_button.grid(row=35, column=2, padx=3, pady=10, sticky="ew")
 
 
         # Variable de control para el botón de ticket
         self.ticket_presionado = False
+        self.correo_presionado= False
+        
         # Desactivar el botón de guardar al principio
         self.guardar_button.config(state="disabled")
         # Desactivar el botón de guardar al principio
         self.generar_ticket_button.config(state="disabled")
+        self.correo_button.config(state="disabled")
+        self.cargar_datos()
     
     def generar_graficas(self):
         # Paso 1: Leer el archivo Excel
@@ -417,8 +427,30 @@ class BitacoraMantenimiento:
         plt.ylabel('Frecuencia')
         plt.title('Frecuencia de Equipos')
         plt.show()
+        
+    def abrir_ventana_estadisticas(self):
+        # Crear una nueva ventana para las estadísticas
+        self.ventana_estadisticas = tk.Toplevel(self.root)
+        self.ventana_estadisticas.title("Estadísticas")
+
+        # Definir los botones en la ventana de estadísticas
+        self.crear_botones_estadisticas()
+
+    def crear_botones_estadisticas(self):
+        # Botón para generar gráficas
+        self.graficas_button = tk.Button(self.ventana_estadisticas, text="Generar Gráficas", command=self.generar_graficas)
+        self.graficas_button.pack(pady=10)
+
+        # Botón para abrir Excel
+        self.abrir_excel_button = tk.Button(self.ventana_estadisticas, text="Abrir Excel", command=self.abrir_excel)
+        self.abrir_excel_button.pack(pady=10)
+
+        # Botón para abrir PDF
+        self.abrir_pdf_button = tk.Button(self.ventana_estadisticas, text="Abrir PDF", command=self.open_pdf)
+        self.abrir_pdf_button.pack(pady=10)
     
     def mandar_correo(self):
+
         # Obtener el correo electrónico del campo de entrada
         correo_destino = self.correo_entry.get()
         
@@ -472,6 +504,9 @@ class BitacoraMantenimiento:
 
             print("Correo enviado exitosamente")
             messagebox.showinfo("Correo", "Correo enviado exitosamente")
+            self.correo_presionado=True
+            self.guardar_button.config(state="normal")
+            # Habilitar el botón de mandar correo
         except Exception as e:
             print(f"Error al enviar el correo electrónico: {e}")
             messagebox.showinfo("Correo", f"Error al enviar el correo electrónico: {e}")
@@ -485,124 +520,331 @@ class BitacoraMantenimiento:
     
 
 
-                
+                    
     def open_pdf(self):
         # Abrir el cuadro de diálogo para seleccionar un archivo PDF
         file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
-
+    
         if not file_path:
             return
-
+    
         # Crear una nueva ventana para mostrar el PDF
         pdf_window = tk.Toplevel(self.root)
         pdf_window.title("PDF Viewer")
         pdf_window.geometry("650x700")  # Cambia el tamaño de la ventana a 800x600 píxeles
-
-        # Mostrar el PDF en la nueva ventana
-        pdf_canvas = tk.Canvas(pdf_window)
-        pdf_canvas.pack(fill=tk.BOTH, expand=True)
-
+    
+        # Crear un widget Canvas para contener el frame
+        canvas = tk.Canvas(pdf_window)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    
+        # Crear una barra de desplazamiento vertical
+        scrollbar = tk.Scrollbar(pdf_window, orient=tk.VERTICAL, command=canvas.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.config(yscrollcommand=scrollbar.set)
+    
+        # Crear un frame para contener las imágenes del PDF
+        pdf_frame = tk.Frame(canvas)
+        canvas.create_window((0, 0), window=pdf_frame, anchor=tk.NW)
+    
+        # Función para desplazar con la rueda del mouse
+        def on_mousewheel(event):
+            canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
+    
+        # Vincular el evento de la rueda del mouse al desplazamiento
+        pdf_window.bind_all("<MouseWheel>", on_mousewheel)
+    
         # Abrir el PDF seleccionado
         pdf_document = fitz.open(file_path)
-
-        # Mostrar cada página del PDF en el lienzo
+    
+        # Mostrar cada página del PDF en el frame
         for page_number in range(pdf_document.page_count):
             page = pdf_document.load_page(page_number)
             pix = page.get_pixmap()
             width, height = pix.width, pix.height
-
+    
             # Convertir la imagen de PIL en una imagen de tkinter
             img = Image.frombytes("RGB", [width, height], pix.samples)
             tk_img = ImageTk.PhotoImage(img)
-
-            # Mostrar la imagen en el lienzo
-            pdf_canvas.create_image(0, 0, anchor=tk.NW, image=tk_img)
-            pdf_canvas.image = tk_img
-  
-    def generar_ticket(self):
-        selected_item = self.equipo_combobox.get()
     
-        # Generar el ticket
-        numero = self.contador_label.cget("text")
+            # Mostrar la imagen en el frame
+            page_label = tk.Label(pdf_frame, image=tk_img)
+            page_label.pack(side=tk.TOP, padx=10, pady=10)
+            page_label.image = tk_img
+    
+        pdf_document.close()  # Cerrar el documento después de usarlo
+    
         
-        ticket_pdf_path =  f"./Archivos/PDFs/{numero}.pdf"
-        c = canvas.Canvas(ticket_pdf_path, pagesize=letter)
-        # Establecer la fuente en el lienzo
+      
+    def generar_ticket(self):
+        if self.reparado_var.get() == "No":  # Si no fue reparado
+        # Definir la función para guardar el motivo
+            def guardar_motivo(otros_motivo_entry):
+                motivo = ""
+                for motivo_check, motivo_var in self.motivos_no_reparado:
+                    if motivo_var.get():
+                        motivo += motivo_check + ", "
+                otro_motivo = otros_motivo_entry.get()
+                if otro_motivo:
+                    motivo += otro_motivo + ", "
         
-        c.drawString(200, 750, "Ticket Generado")
-        c.drawString(100, 730, "Número de ticket: {}".format(numero))
-        c.drawString(100, 710, "Fecha de Recepcion: {}".format(self.fecha_recepcion_entry.get()))
-        c.drawString(100, 690, "Fecha de Entrega: {}".format(self.fecha_entrega_entry.get()))
-        c.drawString(100, 670, "Nombre del Responsable: {}".format(self.nombre_responsable_entry.get()))
-        c.drawString(100, 650, "Teléfono del Responsable: {}".format(self.telefono_responsable_entry.get()))
-        c.drawString(100, 630, "Área del Responsable: {}".format(self.area_responsable_entry.get()))
-        c.drawString(100, 610, "Equipo: {}".format(selected_item))
+                # Obtener el número de contador
+                numero = self.contador_label.cget("text")
+        
+                # Nombre del archivo Excel
+                archivo_excel = "Bitacora_No_Reparados.xlsx"
+        
+                # Verificar si el archivo existe
+                if not os.path.exists(archivo_excel):
+                    # Crear un nuevo archivo Excel si no existe
+                    libro_excel = Workbook()
+                    hoja_motivos = libro_excel.active
+                    hoja_motivos.title = "Motivos_No_Reparado1"
+                    hoja_motivos.append(["Numero", "Motivo"])
+        
+                    # Guardar el numero y el motivo en la hoja
+                    hoja_motivos.append([numero, motivo])
+        
+                    # Guardar cambios en el archivo
+                    libro_excel.save(archivo_excel)
+                else:
+                    # Abrir el archivo Excel existente
+                    libro_excel = load_workbook(archivo_excel)
+                    hoja_motivos = libro_excel.active
+        
+                    # Encontrar la última fila en la hoja
+                    last_row = hoja_motivos.max_row
+        
+                    # Guardar el numero y el motivo en la hoja
+                    hoja_motivos.append([numero, motivo])
+        
+                    # Guardar cambios en el archivo
+                    libro_excel.save(archivo_excel)
+        
+                # Mostrar mensaje de motivo guardado
+                messagebox.showinfo("Motivo Guardado", f"El motivo por el cual no fue reparado es: {motivo}")
+        
+                # Cerrar la ventana del motivo
+                motivo_window.destroy()
+                selected_item = self.equipo_combobox.get()
+                # Generar el ticket
+                numero = self.contador_label.cget("text")
+                
+                ticket_pdf_path =  f"./Archivos/PDFs/{numero}.pdf"
+                c = canvas.Canvas(ticket_pdf_path, pagesize=letter)
+                # Establecer la fuente en el lienzo
+                
+                c.drawString(200, 750, "Ticket Generado")
+                c.drawString(100, 730, "Número de folio: {}".format(numero))
+                c.drawString(100, 710, "Fecha de Recepcion: {}".format(self.fecha_recepcion_entry.get()))
+                c.drawString(100, 690, "Fecha de Entrega: {}".format(self.fecha_entrega_entry.get()))
+                c.drawString(100, 670, "Nombre del Responsable: {}".format(self.nombre_responsable_entry.get()))
+                c.drawString(100, 650, "Teléfono del Responsable: {}".format(self.telefono_responsable_entry.get()))
+                c.drawString(100, 630, "Área del Responsable: {}".format(self.area_responsable_entry.get()))
+                c.drawString(100, 610, "Equipo: {}".format(selected_item))
+                c.drawString(100, 590, "Otro Equipo: {}".format(self.otro_equipo_entry.get()))
+                c.drawString(100, 570, "Modelo del Equipo: {}".format(self.modelo_equipo_entry.get()))
+                c.drawString(100, 550, "Marca del Equipo: {}".format(self.marca_equipo_entry.get()))
+                c.drawString(100, 530, "Número de Serie: {}".format(self.no_serie_entry.get()))
+                c.drawString(100, 510, "Número de Inventario: {}".format(self.no_inventario_entry.get()))
+                falta_equipo= self.faltante_equipo_entry.get()
+                c.drawString(200, 490, "Estado Equipo")
+                c.drawString(100, 470, "Enciende: {}".format("Sí" if self.estado_enciende.get() else "No"))
+                c.drawString(100, 450, "Falta algun componente: {}".format((falta_equipo) if self.estado_componente.get() else "No"))
+                c.drawString(100, 430, "Presenta Corrosion/Oxidacion: {}".format("Sí" if self.estado_corrosion.get() else "No"))
+                c.drawString(100, 410, "Cable Alimentacion: {}".format("Sí" if self.estado_cable.get() else "No"))
+                c.drawString(100, 390, "Daño Botones/Perillas: {}".format("Sí" if self.estado_dano_botones.get() else "No"))
+                c.drawString(100, 370, "Daño Carcasa: {}".format("Sí" if self.estado_dano_carcasa.get() else "No"))
+                c.drawString(100, 350, "Descripcion detallada: {}".format(self.descripcion_detallada_entry.get("1.0", tk.END).strip()))
+                #c.drawString(200, 330, "Mantenimineto:")
+                
+                # Obtener los tipos de mantenimiento seleccionados
+                tipos_mantenimiento = []
+                if self.preventivo_var.get():
+                    tipos_mantenimiento.append("Preventivo")
+                if self.correctivo_var.get():
+                    tipos_mantenimiento.append("Correctivo")
+                if self.diagnostico_var.get():
+                    tipos_mantenimiento.append("Diagnóstico")
+                if self.puesta_en_marcha_var.get():
+                    tipos_mantenimiento.append("Puesta en Marcha")
+                if self.otro_var.get():
+                    tipos_mantenimiento.append("Otro")
+                
+                # Dibujar los tipos de mantenimiento en el PDF
+                tipos_mantenimiento_chunks = [tipos_mantenimiento[i:i+3] for i in range(0, len(tipos_mantenimiento), 3)]
+                for index, chunk in enumerate(tipos_mantenimiento_chunks):
+                    c.drawString(100, 330 - index * 20, "Tipos de Mantenimiento {}: {}".format(index+1, ", ".join(chunk)))
+                
+                c.drawString(100, 290, "Descripcion: {}".format(self.descripcion_entry.get("1.0", tk.END).strip()))
+                c.drawString(100, 270, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
+                c.drawString(200, 250, "Materiales Utilizados")
+                
+                # Obtener los materiales utilizados seleccionados
+                otros_materiales = self.otros_materiales_entry.get()
+                materiales_utilizados = [nombre for nombre, var in self.materiales_utilizados if var.get()]
+                materiales_utilizados_completos = materiales_utilizados.copy()  # Copia la lista original
+                if otros_materiales:
+                    materiales_utilizados_completos.append(otros_materiales)
+                
+                # Dibujar los materiales utilizados en el PDF
+                materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
+                for index, chunk in enumerate(materiales_utilizados_chunks):
+                    c.drawString(100, 230 - index * 20, "Materiales Utilizados {}: {}".format(index+1, ", ".join(chunk)))
+                
+                c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
+                c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
+                c.drawString(100, 150, "Correo: {}".format(self.correo_entry.get()))
+                
+                c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+                
+                # Determinar la posición inicial en la segunda página
+                y_start = 750  # Ajusta esta coordenada según tus necesidades
 
-        c.drawString(100, 590, "Otro Equipo: {}".format(self.otro_equipo_entry.get()))
-        c.drawString(100, 570, "Modelo del Equipo: {}".format(self.modelo_equipo_entry.get()))
-        c.drawString(100, 550, "Marca del Equipo: {}".format(self.marca_equipo_entry.get()))
-        c.drawString(100, 530, "Número de Serie: {}".format(self.no_serie_entry.get()))
-        c.drawString(100, 510, "Número de Inventario: {}".format(self.no_inventario_entry.get()))
-        falta_equipo= self.faltante_equipo_entry.get()
-        c.drawString(200, 490, "Estado Equipo:")
-        c.drawString(100, 470, "Enciende: {}".format("Sí" if self.estado_enciende.get() else "No"))
-        c.drawString(100, 450, "Falta algun componente: {}".format((falta_equipo) if self.estado_componente.get() else "No"))
-        c.drawString(100, 430, "Presenta Corrosion/Oxidacion: {}".format("Sí" if self.estado_corrosion.get() else "No"))
-        c.drawString(100, 410, "Cable Alimentacion: {}".format("Sí" if self.estado_cable.get() else "No"))
-        c.drawString(100, 390, "Daño Botones/Perillas: {}".format("Sí" if self.estado_dano_botones.get() else "No"))
-        c.drawString(100, 370, "Daño Carcasa: {}".format("Sí" if self.estado_dano_carcasa.get() else "No"))
-        c.drawString(100, 350, "Descripcion detallada: {}".format(self.descripcion_detallada_entry.get("1.0", tk.END).strip()))
-        #c.drawString(200, 330, "Mantenimineto:")
+                # Dibujar encabezado de la segunda página
+                c.showPage()  # Cambiar a la segunda página del PDF
+                c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+                
+
+                # Ajustar la posición vertical para los datos adicionales
+                y = y_start - 50  # Ajusta esta cantidad según tus necesidades
+
+                # Dibujar los datos adicionales en la segunda página
+                c.drawString(100, y, "Motivo por el cual no fue reparado:")
+                y -= 20  # Ajusta esta cantidad según tus necesidades
+
+                # Dibujar los checkboxes de motivo por el cual no fue reparado
+                for motivo_check, motivo_var in self.motivos_no_reparado:
+                    if motivo_var.get():
+                        
+                        c.drawString(120, y, motivo_check)
+                        
+                        y -= 20  # Ajusta esta cantidad según tus necesidades
+                c.drawString(120, y, otro_motivo)
+                c.save()
+                messagebox.showinfo("Ticket", "Se ha generado el ticket.")
+                self.ticket_presionado = True
+                # Habilitar el botón de guardar
+                self.correo_button.config(state="normal")
         
-        # Obtener los tipos de mantenimiento seleccionados
-        tipos_mantenimiento = []
-        if self.preventivo_var.get():
-            tipos_mantenimiento.append("Preventivo")
-        if self.correctivo_var.get():
-            tipos_mantenimiento.append("Correctivo")
-        if self.diagnostico_var.get():
-            tipos_mantenimiento.append("Diagnóstico")
-        if self.puesta_en_marcha_var.get():
-            tipos_mantenimiento.append("Puesta en Marcha")
-        if self.otro_var.get():
-            tipos_mantenimiento.append("Otro")
+            # Crear ventana para ingresar motivo
+            motivo_window = tk.Toplevel(self.root)
+            motivo_window.title("Motivo por el cual no fue reparado")
+            # Obtener la posición de la ventana principal
+            x_main, y_main = self.root.winfo_x(), self.root.winfo_y()
         
-        # Dibujar los tipos de mantenimiento en el PDF
-        tipos_mantenimiento_chunks = [tipos_mantenimiento[i:i+3] for i in range(0, len(tipos_mantenimiento), 3)]
-        for index, chunk in enumerate(tipos_mantenimiento_chunks):
-            c.drawString(100, 330 - index * 20, "Tipos de Mantenimiento {}: {}".format(index+1, ", ".join(chunk)))
+            # Calcular la posición de la ventana emergente
+            x_motivo = x_main + 1000  # Ajusta este valor según tu preferencia
+            y_motivo = y_main + 100  # Ajusta este valor según tu preferencia
         
-        c.drawString(100, 290, "Descripcion: {}".format(self.descripcion_entry.get("1.0", tk.END).strip()))
-        c.drawString(100, 270, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
-        c.drawString(200, 250, "Materiales Utilizados")
+            # Establecer la posición de la ventana emergente
+            motivo_window.geometry(f"+{x_motivo}+{y_motivo}")
         
-        # Obtener los materiales utilizados seleccionados
-        otros_materiales = self.otros_materiales_entry.get()
-        materiales_utilizados = [nombre for nombre, var in self.materiales_utilizados if var.get()]
-        materiales_utilizados_completos = materiales_utilizados.copy()  # Copia la lista original
-        if otros_materiales:
-            materiales_utilizados_completos.append(otros_materiales)
+            # Checkboxes 
+            self.motivos_no_reparado = [
+                ("Refacciones obsoletas", tk.BooleanVar()),
+                ("Reparación no costeable", tk.BooleanVar()),
+                ("Material no disponible en el taller", tk.BooleanVar()),
+                ("Tarjeta dañada en su totalidad", tk.BooleanVar()),
+                ("Espera de refacciones", tk.BooleanVar())
+            ]
+            for i, (motivo_check, motivo_var) in enumerate(self.motivos_no_reparado):
+                tk.Checkbutton(motivo_window, text=motivo_check, variable=motivo_var).grid(row=i, column=0, sticky="w")
         
-        # Dibujar los materiales utilizados en el PDF
-        materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
-        for index, chunk in enumerate(materiales_utilizados_chunks):
-            c.drawString(100, 230 - index * 20, "Materiales Utilizados {}: {}".format(index+1, ", ".join(chunk)))
+            otros_motivo_label = tk.Label(motivo_window, text="Otros:")
+            otros_motivo_label.grid(row=len(self.motivos_no_reparado), column=0, sticky="w")
+            otros_motivo_entry = tk.Entry(motivo_window)
+            otros_motivo_entry.grid(row=len(self.motivos_no_reparado), column=1, sticky="w")
         
-        c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
-        c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
-        #c.drawString(100, 150, "Número de ticket: {}".format(self.numero_guardado))
-        
-        c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 50, width=100, height=50, mask='auto')
-        c.save()
-        messagebox.showinfo("Ticket", "Se ha generado el ticket.")
-        self.ticket_presionado = True
-        # Habilitar el botón de guardar
-        self.guardar_button.config(state="normal")
-        
+            guardar_button = tk.Button(motivo_window, text="Guardar", command=lambda: guardar_motivo(otros_motivo_entry))
+            guardar_button.grid(row=len(self.motivos_no_reparado) + 1, column=1, columnspan=2)
+    
+            # Mostrar ventana de motivo
+            motivo_window.mainloop()
+    
+        else:
+            selected_item = self.equipo_combobox.get()
+            # Generar el ticket
+            numero = self.contador_label.cget("text")
+            
+            ticket_pdf_path =  f"./Archivos/PDFs/{numero}.pdf"
+            c = canvas.Canvas(ticket_pdf_path, pagesize=letter)
+            # Establecer la fuente en el lienzo
+            
+            c.drawString(200, 750, "Ticket Generado")
+            c.drawString(100, 730, "Número de folio: {}".format(numero))
+            c.drawString(100, 710, "Fecha de Recepcion: {}".format(self.fecha_recepcion_entry.get()))
+            c.drawString(100, 690, "Fecha de Entrega: {}".format(self.fecha_entrega_entry.get()))
+            c.drawString(100, 670, "Nombre del Responsable: {}".format(self.nombre_responsable_entry.get()))
+            c.drawString(100, 650, "Teléfono del Responsable: {}".format(self.telefono_responsable_entry.get()))
+            c.drawString(100, 630, "Área del Responsable: {}".format(self.area_responsable_entry.get()))
+            c.drawString(100, 610, "Equipo: {}".format(selected_item))
+            c.drawString(100, 590, "Otro Equipo: {}".format(self.otro_equipo_entry.get()))
+            c.drawString(100, 570, "Modelo del Equipo: {}".format(self.modelo_equipo_entry.get()))
+            c.drawString(100, 550, "Marca del Equipo: {}".format(self.marca_equipo_entry.get()))
+            c.drawString(100, 530, "Número de Serie: {}".format(self.no_serie_entry.get()))
+            c.drawString(100, 510, "Número de Inventario: {}".format(self.no_inventario_entry.get()))
+            falta_equipo= self.faltante_equipo_entry.get()
+            c.drawString(200, 490, "Estado Equipo")
+            c.drawString(100, 470, "Enciende: {}".format("Sí" if self.estado_enciende.get() else "No"))
+            c.drawString(100, 450, "Falta algun componente: {}".format((falta_equipo) if self.estado_componente.get() else "No"))
+            c.drawString(100, 430, "Presenta Corrosion/Oxidacion: {}".format("Sí" if self.estado_corrosion.get() else "No"))
+            c.drawString(100, 410, "Cable Alimentacion: {}".format("Sí" if self.estado_cable.get() else "No"))
+            c.drawString(100, 390, "Daño Botones/Perillas: {}".format("Sí" if self.estado_dano_botones.get() else "No"))
+            c.drawString(100, 370, "Daño Carcasa: {}".format("Sí" if self.estado_dano_carcasa.get() else "No"))
+            c.drawString(100, 350, "Descripcion detallada: {}".format(self.descripcion_detallada_entry.get("1.0", tk.END).strip()))
+            #c.drawString(200, 330, "Mantenimineto:")
+            
+            # Obtener los tipos de mantenimiento seleccionados
+            tipos_mantenimiento = []
+            if self.preventivo_var.get():
+                tipos_mantenimiento.append("Preventivo")
+            if self.correctivo_var.get():
+                tipos_mantenimiento.append("Correctivo")
+            if self.diagnostico_var.get():
+                tipos_mantenimiento.append("Diagnóstico")
+            if self.puesta_en_marcha_var.get():
+                tipos_mantenimiento.append("Puesta en Marcha")
+            if self.otro_var.get():
+                tipos_mantenimiento.append("Otro")
+            
+            # Dibujar los tipos de mantenimiento en el PDF
+            tipos_mantenimiento_chunks = [tipos_mantenimiento[i:i+3] for i in range(0, len(tipos_mantenimiento), 3)]
+            for index, chunk in enumerate(tipos_mantenimiento_chunks):
+                c.drawString(100, 330 - index * 20, "Tipos de Mantenimiento {}: {}".format(index+1, ", ".join(chunk)))
+            
+            c.drawString(100, 290, "Descripcion: {}".format(self.descripcion_entry.get("1.0", tk.END).strip()))
+            c.drawString(100, 270, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
+            c.drawString(200, 250, "Materiales Utilizados")
+            
+            # Obtener los materiales utilizados seleccionados
+            otros_materiales = self.otros_materiales_entry.get()
+            materiales_utilizados = [nombre for nombre, var in self.materiales_utilizados if var.get()]
+            materiales_utilizados_completos = materiales_utilizados.copy()  # Copia la lista original
+            if otros_materiales:
+                materiales_utilizados_completos.append(otros_materiales)
+            
+            # Dibujar los materiales utilizados en el PDF
+            materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
+            for index, chunk in enumerate(materiales_utilizados_chunks):
+                c.drawString(100, 230 - index * 20, "Materiales Utilizados {}: {}".format(index+1, ", ".join(chunk)))
+            
+            c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
+            c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
+            c.drawString(100, 150, "Correo: {}".format(self.correo_entry.get()))
+            
+            c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+         
+            c.save()
+            messagebox.showinfo("Ticket", "Se ha generado el ticket.")
+            self.ticket_presionado = True
+            # Habilitar el botón de guardar
+            self.correo_button.config(state="normal")
+
+            
     def guardar_datos(self, event=None):
         # Obtener el equipo seleccionado en el combobox
         descripcion_equipo = self.equipo_combobox.get()
-        
+    
         # Obtener el estado de los checkboxes
         estado_enciende = self.estado_enciende.get()
         estado_cable = self.estado_cable.get()
@@ -610,11 +852,11 @@ class BitacoraMantenimiento:
         estado_dano_botones = self.estado_dano_botones.get()
         estado_corrosion = self.estado_corrosion.get()
         estado_dano_carcasa = self.estado_dano_carcasa.get()
-     
+    
         # Si la descripción del equipo es "Otros", usar el valor de la entrada de texto
         if descripcion_equipo == "Otros":
             descripcion_equipo = self.otro_equipo_entry.get()
-        
+    
         datos = {
             "fecha_recepcion": self.fecha_recepcion_entry.get(),
             "fecha_entrega": self.fecha_entrega_entry.get(),
@@ -636,17 +878,36 @@ class BitacoraMantenimiento:
             "estado_dano_botones": estado_dano_botones,
             "estado_corrosion": estado_corrosion,
             "estado_dano_carcasa": estado_dano_carcasa,
-            # Obtener los tipos de mantenimiento seleccionados
+            # Sección de Mantenimiento del Equipo
+            "mantenimiento_preventivo": self.preventivo_var.get(),
+            "mantenimiento_correctivo": self.correctivo_var.get(),
+            "mantenimiento_diagnostico": self.diagnostico_var.get(),
+            "mantenimiento_puesta_en_marcha": self.puesta_en_marcha_var.get(),
+            "mantenimiento_otro": self.otro_var.get(),
+            # Otros campos de información
+            "descripcion": self.descripcion_entry.get("1.0", tk.END).strip(),
+            "reparado": self.reparado_var.get(),
+            # Materiales Utilizados
+            "materiales_utilizados": {material: var.get() for material, var in self.materiales_utilizados},
+            "otro_material_utilizado": self.otros_materiales_entry.get(),
+            # Responsables
+            "responsable_taller": self.responsable_taller_var.get(),
+            "responsable_equipo_recepcion": self.responsable_recepcion_entry.get()
         }
-        # Generar el ticket
-        numero = self.numero_guardado
+    
+        
+        numero = self.contador_label.cget("text")
         with open(f"./Archivos/Progresos/{numero}.json", "w") as f:
             json.dump(datos, f)
             messagebox.showinfo("Guardar Progreso", "Progreso Guardado Correctamente")
 
+    
     def cargar_datos(self):
         try:
             folio = simpledialog.askstring("Cargar Datos", "Ingrese el folio del archivo JSON a cargar:")
+            if folio is None:  # El usuario canceló la entrada
+                return
+    
             with open(f"./Archivos/Progresos/{folio}.json", "r") as f:
                 datos = json.load(f)
                 self.fecha_recepcion_entry.delete(0, tk.END)
@@ -664,8 +925,8 @@ class BitacoraMantenimiento:
     
                 # Verificar si el campo "estado_equipo" es True y el campo "falta_equipo" es "Falta algun componente"
                 estado_componente = datos.get("estado_componente", False)
-                
-                if estado_componente == True:
+    
+                if estado_componente:
                     self.faltante_equipo_entry.config(state="normal")
                     self.faltante_equipo_entry.insert(0, datos.get("falta_equipo", ""))
                 else:
@@ -692,12 +953,30 @@ class BitacoraMantenimiento:
                 self.estado_dano_botones.set(datos.get("estado_dano_botones", False))
                 self.estado_corrosion.set(datos.get("estado_corrosion", False))
                 self.estado_dano_carcasa.set(datos.get("estado_dano_carcasa", False))
+                # Sección de Mantenimiento del Equipo
+                self.preventivo_var.set(datos.get("mantenimiento_preventivo", False))
+                self.correctivo_var.set(datos.get("mantenimiento_correctivo", False))
+                self.diagnostico_var.set(datos.get("mantenimiento_diagnostico", False))
+                self.puesta_en_marcha_var.set(datos.get("mantenimiento_puesta_en_marcha", False))
+                self.otro_var.set(datos.get("mantenimiento_otro", False))
+                # Otros campos de información
+                self.descripcion_entry.delete("1.0", tk.END)
+                self.descripcion_entry.insert("1.0", datos.get("descripcion", ""))
+                self.reparado_var.set(datos.get("reparado", ""))
+                # Materiales Utilizados
+                for material, var in self.materiales_utilizados:
+                    var.set(datos.get("materiales_utilizados", {}).get(material, False))
+                self.otros_materiales_entry.delete(0, tk.END)
+                self.otros_materiales_entry.insert(0, datos.get("otro_material_utilizado", ""))
+                # Responsables
+                self.responsable_taller_var.set(datos.get("responsable_taller", ""))
+                self.responsable_recepcion_entry.delete(0, tk.END)
+                self.responsable_recepcion_entry.insert(0, datos.get("responsable_equipo_recepcion", ""))
                 messagebox.showinfo("Cargar Progreso", "Progreso Cargado Correctamente")
                 self.contador_label.config(text=folio)
-                
         except FileNotFoundError:
             messagebox.showinfo("Cargar Progreso", "Progreso NO Cargado Correctamente")
-
+    
 
     def cargar_numero(self):
     # Intentar cargar el número guardado desde el archivo
@@ -718,7 +997,17 @@ class BitacoraMantenimiento:
         with open("./Folio/numero_guardado.txt", "w") as file:
             file.write(str(numero))
         
-    
+    def toggle_recibir(self, selection):
+        if selection == "Si":
+            self.responsable_recepcion_entry.config(state="normal")
+            self.responsable_recepcion_entry.delete(0, tk.END)
+            self.responsable_recepcion_entry.insert(0, self.nombre_responsable_entry.get())
+            self.responsable_recepcion_entry.config(state="disabled")
+        elif selection == "No":
+            self.responsable_recepcion_entry.config(state="normal")
+            self.responsable_recepcion_entry.delete(0, tk.END)
+            self.responsable_recepcion_entry.focus()
+
     def toggle_otros(self):
         # Habilitar o deshabilitar la caja de texto "Otros" según el estado del checkbox "Otros"
         if self.otro_var.get():
@@ -743,12 +1032,14 @@ class BitacoraMantenimiento:
             self.area_responsable_entry.get(),
             self.modelo_equipo_entry.get(),
             self.marca_equipo_entry.get(),
+            
             #self.no_serie_entry.get(),
             #self.no_inventario_entry.get(),
             self.descripcion_detallada_entry.get("1.0", tk.END).strip(),
             self.descripcion_entry.get("1.0", tk.END).strip(),
             #self.otros_materiales_entry.get(),
             self.responsable_taller_var.get(),
+            self.reparado_var.get(),
             self.responsable_recepcion_entry.get(),
             
         ]
@@ -846,67 +1137,6 @@ class BitacoraMantenimiento:
         hoja_activa.cell(row=fila_vacia, column=22).value = ", ".join(materiales_utilizados_completos)
         hoja_activa.cell(row=fila_vacia, column=23).value = responsable_taller
         hoja_activa.cell(row=fila_vacia, column=24).value = responsable_recepcion
-    
-        if not self.reparado_var.get():  # Si no fue reparado
-            motivo_window = tk.Toplevel(self.root)
-            motivo_window.title("Motivo por el cual no fue reparado")
-            # Obtener la posición de la ventana principal
-            x_main, y_main = self.root.winfo_x(), self.root.winfo_y()
-    
-            # Calcular la posición de la ventana emergente
-            x_motivo = x_main + 1000  # Ajusta este valor según tu preferencia
-            y_motivo = y_main + 100  # Ajusta este valor según tu preferencia
-    
-            # Establecer la posición de la ventana emergente
-            motivo_window.geometry(f"+{x_motivo}+{y_motivo}")
-    
-            def guardar_motivo():
-                motivo = ""
-                for motivo_check, motivo_var in self.motivos_no_reparado:
-                    if motivo_var.get():
-                        motivo += motivo_check + ", "
-                otro_motivo = otros_motivo_entry.get()
-                if otro_motivo:
-                    motivo += otro_motivo + ", "
-    
-                # Obtener el número de contador
-                numero = self.numero_guardado
-    
-                # Encontrar la última fila en la segunda hoja
-                hoja_motivos = libro_excel["Motivos_No_Reparado1"]
-                last_row = len(hoja_motivos['A'])
-    
-                # Guardar el numero y el motivo en la segunda hoja
-                hoja_motivos.cell(row=last_row + 1, column=1, value=numero)
-                hoja_motivos.cell(row=last_row + 1, column=2, value=motivo)
-    
-                # Guardar cambios en el archivo
-                libro_excel.save("bitacora_mantenimiento.xlsx")
-    
-                messagebox.showinfo("Motivo Guardado", f"El motivo por el cual no fue reparado es: {motivo}")
-    
-                motivo_window.destroy()
-
-    
-            # Checkboxes 
-            self.motivos_no_reparado = [
-                ("Refacciones obsoletas", tk.BooleanVar()),
-                ("Reparación no costeable", tk.BooleanVar()),
-                ("Material no disponible en el taller", tk.BooleanVar()),
-                ("Tarjeta dañada en su totalidad", tk.BooleanVar()),
-                ("Espera de refacciones", tk.BooleanVar())
-            ]
-            for i, (motivo_check, motivo_var) in enumerate(self.motivos_no_reparado):
-                tk.Checkbutton(motivo_window, text=motivo_check, variable=motivo_var).grid(row=i, column=0, sticky="w")
-    
-            otros_motivo_label = tk.Label(motivo_window, text="Otros:")
-            otros_motivo_label.grid(row=len(self.motivos_no_reparado), column=0, sticky="w")
-            otros_motivo_entry = tk.Entry(motivo_window)
-            otros_motivo_entry.grid(row=len(self.motivos_no_reparado), column=1, sticky="w")
-    
-            guardar_button = tk.Button(motivo_window, text="Guardar", command=guardar_motivo)
-            guardar_button.grid(row=len(self.motivos_no_reparado) + 1, column=1, columnspan=2)
-
         # Guardar cambios en el archivo
         libro_excel.save("bitacora_mantenimiento.xlsx")
 
@@ -916,8 +1146,8 @@ class BitacoraMantenimiento:
         # Limpiar campos después de guardar
         
         self.limpiar_campos()
-        self.numero_guardado += 1
-        self.guardar_numero(self.numero_guardado)
+        #self.numero_guardado += 1
+        #self.guardar_numero(self.numero_guardado)
         self.contador_label.config(text=f"{self.numero_guardado}") 
         #self.generar_codigo_barras(str(self.numero_guardado))
     
@@ -928,7 +1158,7 @@ class BitacoraMantenimiento:
         self.nombre_responsable_entry.delete(0, tk.END)
         self.telefono_responsable_entry.delete(0, tk.END)
         self.area_responsable_entry.delete(0, tk.END)
-        
+        self.correo_entry.delete(0, tk.END)
         self.modelo_equipo_entry.delete(0, tk.END)
         self.marca_equipo_entry.delete(0, tk.END)
         self.no_serie_entry.delete(0, tk.END)

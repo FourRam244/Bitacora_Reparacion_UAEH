@@ -9,6 +9,13 @@ from tkinter import messagebox  # Para mostrar mensajes de cuadro de diálogo
 
 from tkinter import simpledialog
 
+from PIL import Image, ImageDraw, ImageFont
+import barcode
+from barcode.writer import ImageWriter
+import win32print
+import win32ui
+from PIL import Image, ImageWin
+
 
 # Importación del widget de calendario para Tkinter
 from tkcalendar import DateEntry
@@ -207,100 +214,9 @@ class BitacoraMantenimiento:
         self.descripcion_detallada_entry = tk.Text(self.frame, height=5, width=80, wrap=tk.WORD)
         self.descripcion_detallada_entry.grid(row=16, column=1, columnspan=3, sticky="w")
         
-        # Título 
-        titulo_estado_equipo = tk.Label(self.frame, text="Mantenimineto", font=("Helvetica", 12, "bold"), pady=10)
-        titulo_estado_equipo.grid(row=17, column=0, columnspan=4)
-        titulo_estado_equipo.config(justify="center")
+        self.impr = tk.Button(self.frame, text="Imprimir Ticket", command=lambda: self.imprimir())
+        self.impr.grid(row=37, column=1, columnspan=1, pady=10, sticky="w")
         
-        # Sección de Mantenimiento del Equipo
-        tk.Label(self.frame, text="Mantenimiento del Equipo:").grid(row=18, column=0, sticky="e")
-        self.preventivo_var = tk.BooleanVar()
-        self.preventivo_checkbutton = tk.Checkbutton(self.frame, text="Preventivo", variable=self.preventivo_var)
-        self.preventivo_checkbutton.grid(row=18, column=1, sticky="w")
-        
-        self.correctivo_var = tk.BooleanVar()
-        self.correctivo_checkbutton = tk.Checkbutton(self.frame, text="Correctivo", variable=self.correctivo_var)
-        self.correctivo_checkbutton.grid(row=18, column=2, sticky="w")
-        
-        self.diagnostico_var = tk.BooleanVar()
-        self.diagnostico_checkbutton = tk.Checkbutton(self.frame, text="Diagnóstico", variable=self.diagnostico_var)
-        self.diagnostico_checkbutton.grid(row=19, column=1, sticky="w")
-        
-        self.puesta_en_marcha_var = tk.BooleanVar()
-        self.puesta_en_marcha_checkbutton = tk.Checkbutton(self.frame, text="Puesta en Marcha", variable=self.puesta_en_marcha_var)
-        self.puesta_en_marcha_checkbutton.grid(row=19, column=2, sticky="w")
-        
-        self.otro_var = tk.BooleanVar()
-        self.otro_checkbutton = tk.Checkbutton(self.frame, text="Otro", variable=self.otro_var)
-        self.otro_checkbutton.grid(row=19, column=3, sticky="w")
-        
-        # Otros campos de información
-        tk.Label(self.frame, text="Descripción:").grid(row=20, column=0, sticky="ne")
-        self.descripcion_entry = tk.Text(self.frame, height=5, width=80, wrap=tk.WORD)
-        self.descripcion_entry.grid(row=20, column=1, columnspan=3, sticky="w")
-        
-        tk.Label(self.frame, text="¿Fue reparado?").grid(row=21, column=0, sticky="e")
-        self.reparado_var = tk.StringVar()
-        reparado_options = ["Si", "No"]
-        self.reparado_dropdown = tk.OptionMenu(self.frame, self.reparado_var, *reparado_options)
-        self.reparado_dropdown.grid(row=21, column=1, columnspan=2, sticky="w")
-        
-        
-        
-        # Título 
-        titulo_estado_equipo = tk.Label(self.frame, text="Lista de Materiales Utilizados", font=("Helvetica", 12, "bold"), pady=10)
-        titulo_estado_equipo.grid(row=22, column=0, columnspan=4)
-        titulo_estado_equipo.config(justify="center")
-        
-        # Checkboxes para Materiales Utilizados
-        tk.Label(self.frame, text="Materiales Utilizados:").grid(row=23, column=0, sticky="e")
-        self.materiales_utilizados = [
-            ("Aceite lubricante multiusos", tk.BooleanVar()),
-            ("Alcohol Isopropílico", tk.BooleanVar()),
-            ("Soldadura (Estaño)", tk.BooleanVar()),
-            ("Aislantes", tk.BooleanVar()),
-            ("Cable de Conexión", tk.BooleanVar()),
-            ("Conectores y/o terminales", tk.BooleanVar()),
-            ("Potenciómetros", tk.BooleanVar()),
-            ("Cables de Alimentación", tk.BooleanVar()),
-            ("Dispositivos electrónicos de potencia", tk.BooleanVar()),
-            ("Dispositivos de sujeción", tk.BooleanVar()),
-            ("Fusibles", tk.BooleanVar()),
-            ("Liquido Limpiador Multiusos", tk.BooleanVar())
-        ]
-        for i, (nombre, var) in enumerate(self.materiales_utilizados):
-            if i < 6:
-                column = 1
-            else:
-                column = 2
-                i -= 6
-            tk.Checkbutton(self.frame, text=nombre, variable=var).grid(row=23+i, column=column, sticky="w")
-            
-        self.otro_var = tk.BooleanVar()
-        self.otro_checkbox = tk.Checkbutton(self.frame, text="Otros", variable=self.otro_var,command=self.toggle_otros)
-        self.otro_checkbox.grid(row=30, column=2, sticky="w")   
-        
-        # Caja de texto para Otros Materiales Utilizados
-        tk.Label(self.frame, text="Otros:").grid(row=30, column=0, sticky="e")
-        self.otros_materiales_entry = tk.Entry(self.frame, state="disabled")
-        self.otros_materiales_entry.grid(row=30, column=1, columnspan=2, sticky="w")
-    
-        # Título 
-        titulo_estado_equipo = tk.Label(self.frame, text="Responsables", font=("Helvetica", 12, "bold"), pady=10)
-        titulo_estado_equipo.grid(row=31, column=0, columnspan=4)
-        titulo_estado_equipo.config(justify="center")
-          
-                # Responsable de Taller
-        tk.Label(self.frame, text="Responsable de Taller:").grid(row=32, column=0, sticky="e")
-        self.responsable_taller_var = tk.StringVar()
-        responsable_taller_options = ["Juan Daniel Ramírez Zamora", "Jose Manuel Fernandez Ramírez", "Otro"]
-        self.responsable_taller_dropdown = tk.OptionMenu(self.frame, self.responsable_taller_var, *responsable_taller_options)
-        self.responsable_taller_dropdown.grid(row=32, column=1, columnspan=2, sticky="w")
-        
-        # Cajas de texto para Responsable equipo Recepción y Firma de conformidad
-        tk.Label(self.frame, text="Responsable equipo Recepción:").grid(row=32, column=2, sticky="e")
-        self.responsable_recepcion_entry = tk.Entry(self.frame)
-        self.responsable_recepcion_entry.grid(row=32, column=3, columnspan=2, sticky="w")
     
         self.cargar_datos()
             
@@ -355,67 +271,173 @@ class BitacoraMantenimiento:
         with open(f"./Archivos/Progresos/{numero}.json", "w") as f:
             json.dump(datos, f)
             messagebox.showinfo("Guardar Progreso", "Progreso Guardado Correctamente")
-
     
+    def imprimir(self):
+        
+        # Dimensiones de la imagen (2x1 pulgadas)
+        ancho = (144 * 2)*12
+        alto = (144 * 1)*12
+        
+        # Crear una nueva imagen en blanco
+        imagen = Image.new("RGB", (ancho, alto), "white")
+        draw = ImageDraw.Draw(imagen)
+        
+        # Cargar los logotipos
+        logo_izquierdo = Image.open("./img/l1.png").resize((int(ancho * 0.25), int(alto * 0.21)))
+        logo_derecho = Image.open("./img/logo2.jpg").resize((int(ancho * 0.25), int(alto * 0.21)))
+        
+        # Pegar los logotipos en la parte superior
+        imagen.paste(logo_izquierdo, (int(ancho * 0.05), int(alto * 0.05)))
+        imagen.paste(logo_derecho, (ancho - int(ancho * 0.25), int(alto * 0.05)))
+        # Agregar texto
+        texto1 = "Preventivo ( )   Correctivo ( )"
+        fecha=self.fecha_recepcion_entry.get()
+        texto2 = f"Fecha: {fecha} "
+        fuente = ImageFont.truetype("arial.ttf", int(alto * 0.1))
+
+        # Calcular el tamaño del texto1
+        texto1_rectangulo = draw.textbbox((0, 0), texto1, font=fuente)
+        texto1_ancho = texto1_rectangulo[2] - texto1_rectangulo[0]
+
+        # Calcular el tamaño del texto2
+        texto2_rectangulo = draw.textbbox((0, 0), texto2, font=fuente)
+        texto2_ancho = texto2_rectangulo[2] - texto2_rectangulo[0]
+
+        # Calcular las coordenadas para centrar el texto horizontalmente
+        texto1_x = (ancho - texto1_ancho) // 2
+        texto2_x = (ancho - texto2_ancho) // 2
+
+        # Pegar el texto en la imagen
+        draw.text((texto1_x, int(alto * 0.3)), texto1, fill="black", font=fuente)
+        draw.text((texto2_x, int(alto * 0.45)), texto2, fill="black", font=fuente)
+        
+        # Generar código de barras
+        numero = self.contador_label.cget("text")
+        codigo = barcode.get_barcode_class('code128')
+        codigo_imagen = codigo(numero, writer=ImageWriter())
+        codigo_imagen.save('codigo_barras')
+        
+        # Cargar y pegar el código de barras en la parte inferior (centrado horizontalmente)
+        codigo_barras = Image.open('codigo_barras.png').resize((int(ancho * 0.6), int(alto * 0.4)))
+        posicion_x = (ancho - codigo_barras.width) // 2
+        posicion_y = alto - int(alto * 0.4)
+        imagen.paste(codigo_barras, (posicion_x, posicion_y))
+        
+        # Guardar la imagen generada
+        imagen.save(f"./Archivos/Tickets/{numero}.jpg")
+        #
+        # HORZRES / VERTRES = área imprimible
+        #
+        HORZRES = 8
+        VERTRES = 10
+        #
+        # LOGPIXELS = puntos por pulgada
+        #
+        LOGPIXELSX = 88
+        LOGPIXELSY = 90
+        #
+        # PHYSICALWIDTH/HEIGHT = area total
+        #
+        PHYSICALWIDTH = 110
+        PHYSICALHEIGHT = 111
+        #
+        # PHYSICALOFFSETX/Y = margen izquierdo/superior
+        #
+        PHYSICALOFFSETX = 112
+        PHYSICALOFFSETY = 113
+
+        printer_name = win32print.GetDefaultPrinter()
+        file_name = f"./Archivos/Tickets/{numero}.jpg" #nota la imagenes se ven mejor en monocromatico .bmp
+        #
+        hDC = win32ui.CreateDC()
+        hDC.CreatePrinterDC(printer_name)
+        printable_area = hDC.GetDeviceCaps(HORZRES), hDC.GetDeviceCaps(VERTRES)
+        printer_size = hDC.GetDeviceCaps(PHYSICALWIDTH), hDC.GetDeviceCaps(PHYSICALHEIGHT)
+        printer_margins = hDC.GetDeviceCaps(PHYSICALOFFSETX), hDC.GetDeviceCaps(PHYSICALOFFSETY)
+        #
+        #
+        bmp = Image.open(file_name)
+        if bmp.size[0] > bmp.size[1]:
+            bmp = bmp.rotate(0)  # Rotar 
+
+        ratios = [1.0 * printable_area[0] / bmp.size[0], 1.0 * printable_area[1] / bmp.size[1]]
+        scale = min(ratios)
+
+        #
+        # Inicie el trabajo de impresión y dibuje el mapa de bits para
+        #  el dispositivo de impresión en el tamaño escalado.
+        #
+        hDC.StartDoc(file_name)
+        hDC.StartPage()
+
+        dib = ImageWin.Dib(bmp)
+        scaled_width, scaled_height = [int(scale * i) for i in bmp.size]
+        x1 = int((printer_size[0] - scaled_width) / 2)
+        y1 = int((printer_size[1] - scaled_height) / 2)
+        x2 = x1 + scaled_width
+        y2 = y1 + scaled_height
+        dib.draw(hDC.GetHandleOutput(), (x1, y1, x2, y2))
+
+        hDC.EndPage()
+        hDC.EndDoc()
+        hDC.DeleteDC()
+        
     def cargar_datos(self):
-        try:
-            folio = simpledialog.askstring("Cargar Datos", "Ingrese el folio del archivo JSON a cargar:")
-            with open(f"./Archivos/Progresos/{folio}.json", "r") as f:
-                datos = json.load(f)
-                self.fecha_recepcion_entry.delete(0, tk.END)
-                self.fecha_entrega_entry.delete(0, tk.END)
-                self.no_serie_entry.delete(0, tk.END)
-                self.no_inventario_entry.delete(0, tk.END)
-                # Asignar los datos cargados a los campos correspondientes
-                self.fecha_recepcion_entry.insert(0, datos.get("fecha_recepcion", ""))
-                self.fecha_entrega_entry.insert(0, datos.get("fecha_entrega", ""))
-                self.nombre_responsable_entry.insert(0, datos.get("nombre_responsable", ""))
-                self.telefono_responsable_entry.insert(0, datos.get("telefono_responsable", ""))
-                self.area_responsable_entry.insert(0, datos.get("area_responsable", ""))
-                self.correo_entry.insert(0, datos.get("correo", ""))
-                self.otro_equipo_entry.insert(0, datos.get("otro_equipo", ""))
-    
-                # Verificar si el campo "estado_equipo" es True y el campo "falta_equipo" es "Falta algun componente"
-                estado_componente = datos.get("estado_componente", False)
-                
-                if estado_componente == True:
-                    self.faltante_equipo_entry.config(state="normal")
-                    self.faltante_equipo_entry.insert(0, datos.get("falta_equipo", ""))
-                else:
-                    self.faltante_equipo_entry.config(state="disabled")
-    
-                # Cargar los estados de los Checkbuttons
-                self.modelo_equipo_entry.insert(0, datos.get("modelo_equipo", ""))
-                self.marca_equipo_entry.insert(0, datos.get("marca_equipo", ""))
-                self.no_serie_entry.insert(0, datos.get("no_serie", ""))
-                self.no_inventario_entry.insert(0, datos.get("no_inventario", ""))
-                self.descripcion_detallada_entry.insert("1.0", datos.get("descripcion_detallada", ""))
-                # Si la descripción del equipo es "Otros", establecer el valor en el combobox y habilitar la entrada de texto
-                descripcion_equipo = datos.get("descripcion_equipo", "")
-                if descripcion_equipo == "Otros":
-                    self.equipo_combobox.set("Otros")
-                    self.otro_equipo_entry.config(state="normal")
-                else:
-                    self.equipo_combobox.set(descripcion_equipo)
-                    self.otro_equipo_entry.config(state="disabled")
-                # Cargar los estados de los Checkbuttons
-                self.estado_enciende.set(datos.get("estado_enciende", False))
-                self.estado_cable.set(datos.get("estado_cable", False))
-                self.estado_componente.set(datos.get("estado_componente", False))
-                self.estado_dano_botones.set(datos.get("estado_dano_botones", False))
-                self.estado_corrosion.set(datos.get("estado_corrosion", False))
-                self.estado_dano_carcasa.set(datos.get("estado_dano_carcasa", False))
-                messagebox.showinfo("Cargar Progreso", "Progreso Cargado Correctamente")
-                self.contador_label.config(text=folio)
-                
-                
-        except FileNotFoundError:
-            messagebox.showinfo("Cargar Progreso", "Progreso NO Cargado Correctamente")
-
-
-
-
-
+        while True:
+            try:
+                folio = simpledialog.askstring("Cargar Datos", "Ingrese el folio del archivo JSON a cargar:")
+                if folio is None:  # El usuario canceló la entrada
+                    break
+                with open(f"./Archivos/Progresos/{folio}.json", "r") as f:
+                    datos = json.load(f)
+                    self.fecha_recepcion_entry.delete(0, tk.END)
+                    self.fecha_entrega_entry.delete(0, tk.END)
+                    self.no_serie_entry.delete(0, tk.END)
+                    self.no_inventario_entry.delete(0, tk.END)
+                    # Asignar los datos cargados a los campos correspondientes
+                    self.fecha_recepcion_entry.insert(0, datos.get("fecha_recepcion", ""))
+                    self.fecha_entrega_entry.insert(0, datos.get("fecha_entrega", ""))
+                    self.nombre_responsable_entry.insert(0, datos.get("nombre_responsable", ""))
+                    self.telefono_responsable_entry.insert(0, datos.get("telefono_responsable", ""))
+                    self.area_responsable_entry.insert(0, datos.get("area_responsable", ""))
+                    self.correo_entry.insert(0, datos.get("correo", ""))
+                    self.otro_equipo_entry.insert(0, datos.get("otro_equipo", ""))
+        
+                    # Verificar si el campo "estado_equipo" es True y el campo "falta_equipo" es "Falta algun componente"
+                    estado_componente = datos.get("estado_componente", False)
+                    
+                    if estado_componente:
+                        self.faltante_equipo_entry.config(state="normal")
+                        self.faltante_equipo_entry.insert(0, datos.get("falta_equipo", ""))
+                    else:
+                        self.faltante_equipo_entry.config(state="disabled")
+        
+                    # Cargar los estados de los Checkbuttons
+                    self.modelo_equipo_entry.insert(0, datos.get("modelo_equipo", ""))
+                    self.marca_equipo_entry.insert(0, datos.get("marca_equipo", ""))
+                    self.no_serie_entry.insert(0, datos.get("no_serie", ""))
+                    self.no_inventario_entry.insert(0, datos.get("no_inventario", ""))
+                    self.descripcion_detallada_entry.insert("1.0", datos.get("descripcion_detallada", ""))
+                    # Si la descripción del equipo es "Otros", establecer el valor en el combobox y habilitar la entrada de texto
+                    descripcion_equipo = datos.get("descripcion_equipo", "")
+                    if descripcion_equipo == "Otros":
+                        self.equipo_combobox.set("Otros")
+                        self.otro_equipo_entry.config(state="normal")
+                    else:
+                        self.equipo_combobox.set(descripcion_equipo)
+                        self.otro_equipo_entry.config(state="disabled")
+                    # Cargar los estados de los Checkbuttons
+                    self.estado_enciende.set(datos.get("estado_enciende", False))
+                    self.estado_cable.set(datos.get("estado_cable", False))
+                    self.estado_componente.set(datos.get("estado_componente", False))
+                    self.estado_dano_botones.set(datos.get("estado_dano_botones", False))
+                    self.estado_corrosion.set(datos.get("estado_corrosion", False))
+                    self.estado_dano_carcasa.set(datos.get("estado_dano_carcasa", False))
+                    messagebox.showinfo("Cargar Progreso", "Progreso Cargado Correctamente")
+                    self.contador_label.config(text=folio)
+                    break  # Salir del bucle después de cargar correctamente
+            except FileNotFoundError:
+                messagebox.showinfo("Cargar Progreso", "Progreso NO Cargado Correctamente")
     def cargar_numero(self):
     # Intentar cargar el número guardado desde el archivo
     
@@ -457,7 +479,7 @@ class BitacoraMantenimiento:
 
 # Inicializar la aplicación Tkinter
 root = tk.Tk()
-root.geometry("900x750")
+root.geometry("900x610")
 app = BitacoraMantenimiento(root)
 
 
