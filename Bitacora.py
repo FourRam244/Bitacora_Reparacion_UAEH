@@ -1,5 +1,5 @@
 # Importación de módulos para el manejo de imágenes
-from PIL import Image, ImageTk, ImageWin  # Para trabajar con imágenes en Tkinter
+from PIL import Image, ImageTk, ImageWin, ImageDraw  # Para trabajar con imágenes en Tkinter
 
 # Importación del módulo tkinter para la creación de la interfaz gráfica
 import tkinter as tk
@@ -38,8 +38,46 @@ import smtplib
 import email.mime.multipart
 import email.mime.base
 import email.mime.text
+#clase para dibujar la firma
+class SignatureApp:
+    def __init__(self, root, save_name):
+        self.root = root
+        self.save_name = save_name
+        self.root.title(f"Firma con el Mouse - {save_name}")
 
+        self.canvas = tk.Canvas(self.root, width=400, height=200, bg="white")
+        self.canvas.pack()
 
+        self.button_frame = tk.Frame(self.root)
+        self.button_frame.pack(fill=tk.X)
+
+        self.clear_button = tk.Button(self.button_frame, text="Limpiar", command=self.clear_canvas)
+        self.clear_button.pack(side=tk.LEFT)
+
+        self.save_button = tk.Button(self.button_frame, text="Guardar", command=self.save_signature)
+        self.save_button.pack(side=tk.LEFT)
+
+        self.canvas.bind("<B1-Motion>", self.paint)
+
+        self.image = Image.new("RGB", (400, 200), "white")
+        self.draw = ImageDraw.Draw(self.image)
+    #Dibujar
+    def paint(self, event):
+        x1, y1 = (event.x - 1), (event.y - 1)
+        x2, y2 = (event.x + 1), (event.y + 1)
+        self.canvas.create_oval(x1, y1, x2, y2, fill="black", width=2)
+        self.draw.line([x1, y1, x2, y2], fill="black", width=2)
+        #limpiar lienzo
+    def clear_canvas(self):
+        self.canvas.delete("all")
+        self.image = Image.new("RGB", (400, 200), "white")
+        self.draw = ImageDraw.Draw(self.image)
+        #Guardar Firma
+    def save_signature(self):
+        filename = f"firma_{self.save_name}.png"
+        self.image.save(filename)
+        messagebox.showinfo("Firma", "Firma guardada correctamente.")
+        self.root.destroy()  # Cierra la ventana de firma después del mensaje
 
 class BitacoraMantenimiento:
     def __init__(self, root):   
@@ -364,7 +402,12 @@ class BitacoraMantenimiento:
         # Botón para generar ticket
         self.correo_button = tk.Button(self.frame, text="Mandar Correo", command=self.mandar_correo)
         self.correo_button.grid(row=35, column=2, padx=3, pady=10, sticky="ew")
-
+        #Boton abrir vetana firma A
+        self.firma_taller = tk.Button(self.frame, text="Firma Responsable Taller", command=lambda: self.open_signature_app("Taller"))
+        self.firma_taller.grid(row=34, column=3, padx=4, pady=10, sticky="ew")
+        #boton abririr ventan firma B
+        self.firma_equipo = tk.Button(self.frame, text="Firma Responsable Equipo", command=lambda: self.open_signature_app("Equipo"))
+        self.firma_equipo.grid(row=35, column=3, padx=4, pady=10, sticky="ew")
 
         # Variable de control para el botón de ticket
         self.ticket_presionado = False
@@ -375,8 +418,22 @@ class BitacoraMantenimiento:
         # Desactivar el botón de guardar al principio
         self.generar_ticket_button.config(state="disabled")
         self.correo_button.config(state="disabled")
+        self.firma_taller.config(state="disabled")
+        self.estadisticas_button.config(state="disabled")
+        self.guardar_p_button.config(state="disabled")
         self.cargar_datos()
     
+    #Metodo para abrir el cuadro de firma
+    def open_signature_app(self, name):
+        signature_window = tk.Toplevel(self.root)
+        app = SignatureApp(signature_window, name)
+        self.firma_taller.config(state="normal")
+        self.firma_equipo.config(state="disabled")
+        if name=="Taller":
+            self.firma_taller.config(state="disable")
+            self.generar_ticket_button.config(state="normal")
+            
+        
     def generar_graficas(self):
         # Paso 1: Leer el archivo Excel
         df = pd.read_excel('bitacora_mantenimiento.xlsx')
@@ -480,7 +537,7 @@ class BitacoraMantenimiento:
             mensaje['Subject'] = "Correo electrónico con archivo adjunto"
 
             # Añadir el cuerpo del mensaje
-            cuerpo = "Por medio de la presente se le hace llegar el documento comprobante del mantenimiento/reparacion/manufactura de su equipo/pieza, \nCordiales saludos y buen dia \nEn caso de cualquier duda o aclaracion contactarse a: \nreparaciones_ucl@uaeh.edu.mx \n EXT. 13224 "
+            cuerpo = "Estimad@ Usuari@ \nAdjunto a este correo electrónico, se envía el documento que certifica el mantenimiento preventivo, correctivo o fabricación realizado en su equipo o pieza por el Taller de Reparaciones de la Unidad Central de Laboratorios.\nSaludos cordiales \nEn caso de cualquier duda o aclaración contactarse a:\nreparaciones_ucl@uaeh.edu.mx \no a la ext.: 13224"
             mensaje.attach(email.mime.text.MIMEText(cuerpo, 'plain'))
 
             # Añadir el archivo como adjunto
@@ -505,7 +562,9 @@ class BitacoraMantenimiento:
             print("Correo enviado exitosamente")
             messagebox.showinfo("Correo", "Correo enviado exitosamente")
             self.correo_presionado=True
-            self.guardar_button.config(state="normal")
+            
+            self.correo_button.config(state="disabled")
+            self.guardar_p_button.config(state="normal")
             # Habilitar el botón de mandar correo
         except Exception as e:
             print(f"Error al enviar el correo electrónico: {e}")
@@ -694,8 +753,13 @@ class BitacoraMantenimiento:
                 c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
                 c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
                 c.drawString(100, 150, "Correo: {}".format(self.correo_entry.get()))
+                c.drawString(100, 125, "Firma Responsable Taller: ")
+                c.drawString(390, 125, "Firma Responsable Equipo: ")
                 
                 c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+                
+                c.drawImage("firma_Taller.png", 80, 50, width=120, height=70, mask='auto')
+                c.drawImage("firma_Equipo.png", 390, 50, width=120, height=70, mask='auto')
                 
                 # Determinar la posición inicial en la segunda página
                 y_start = 750  # Ajusta esta coordenada según tus necesidades
@@ -724,6 +788,7 @@ class BitacoraMantenimiento:
                 messagebox.showinfo("Ticket", "Se ha generado el ticket.")
                 self.ticket_presionado = True
                 # Habilitar el botón de guardar
+                self.generar_ticket_button.config(state="disabled")
                 self.correo_button.config(state="normal")
         
             # Crear ventana para ingresar motivo
@@ -831,13 +896,19 @@ class BitacoraMantenimiento:
             c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
             c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
             c.drawString(100, 150, "Correo: {}".format(self.correo_entry.get()))
+            c.drawString(100, 125, "Firma Responsable Taller: ")
+            c.drawString(390, 125, "Firma Responsable Equipo: ")
             
             c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+            
+            c.drawImage("firma_Taller.png", 80, 50, width=120, height=70, mask='auto')
+            c.drawImage("firma_Equipo.png", 390, 50, width=120, height=70, mask='auto')
          
             c.save()
             messagebox.showinfo("Ticket", "Se ha generado el ticket.")
             self.ticket_presionado = True
             # Habilitar el botón de guardar
+            self.generar_ticket_button.config(state="disabled")
             self.correo_button.config(state="normal")
 
             
@@ -900,11 +971,13 @@ class BitacoraMantenimiento:
         with open(f"./Archivos/Progresos/{numero}.json", "w") as f:
             json.dump(datos, f)
             messagebox.showinfo("Guardar Progreso", "Progreso Guardado Correctamente")
+            self.guardar_p_button.config(state="disabled")
+            self.guardar_button.config(state="normal")
 
     
     def cargar_datos(self):
         try:
-            folio = simpledialog.askstring("Cargar Datos", "Ingrese el folio del archivo JSON a cargar:")
+            folio = simpledialog.askstring("Cargar Datos", "Ingrese el folioa a cargar:")
             if folio is None:  # El usuario canceló la entrada
                 return
     
@@ -1022,32 +1095,7 @@ class BitacoraMantenimiento:
         else:
             self.faltante_equipo_entry.config(state="disabled")
 
-    def check_campos(self):
-        # Verificar si hay algo escrito en todas las cajas de texto
-        campos = [
-            self.fecha_recepcion_entry.get(),
-            self.fecha_entrega_entry.get(),
-            self.nombre_responsable_entry.get(),
-            self.telefono_responsable_entry.get(),
-            self.area_responsable_entry.get(),
-            self.modelo_equipo_entry.get(),
-            self.marca_equipo_entry.get(),
-            
-            #self.no_serie_entry.get(),
-            #self.no_inventario_entry.get(),
-            self.descripcion_detallada_entry.get("1.0", tk.END).strip(),
-            self.descripcion_entry.get("1.0", tk.END).strip(),
-            #self.otros_materiales_entry.get(),
-            self.responsable_taller_var.get(),
-            self.reparado_var.get(),
-            self.responsable_recepcion_entry.get(),
-            
-        ]
-        # Comprobar si alguna caja de texto está vacía
-        if all(campos):
-            self.generar_ticket_button.config(state="normal")
-        else:
-            self.generar_ticket_button.config(state="disabled")            
+       
     
             
     def guardar_bitacora(self):
@@ -1150,6 +1198,7 @@ class BitacoraMantenimiento:
         #self.guardar_numero(self.numero_guardado)
         self.contador_label.config(text=f"{self.numero_guardado}") 
         #self.generar_codigo_barras(str(self.numero_guardado))
+        self.estadisticas_button.config(state="normal")
     
     def limpiar_campos(self):
         # Limpiar todos los campos de entrada
@@ -1220,8 +1269,6 @@ root = tk.Tk()
 root.geometry("900x750")
 app = BitacoraMantenimiento(root)
 
-# Verificar los campos en cada cambio
-root.bind("<Key>", lambda e: app.check_campos())
 
 # Ejecutar la aplicación
 root.mainloop()
