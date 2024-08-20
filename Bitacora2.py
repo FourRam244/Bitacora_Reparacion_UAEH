@@ -214,7 +214,7 @@ class BitacoraMantenimiento:
         self.descripcion_detallada_entry = tk.Text(self.frame, height=5, width=80, wrap=tk.WORD)
         self.descripcion_detallada_entry.grid(row=16, column=1, columnspan=3, sticky="w")
         
-        self.impr = tk.Button(self.frame, text="Imprimir Ticket", command=lambda: self.imprimir())
+        self.impr = tk.Button(self.frame, text="Imprimir Etiqueta", command=lambda: self.imprimir())
         self.impr.grid(row=37, column=1, columnspan=1, pady=10, sticky="w")
         
     

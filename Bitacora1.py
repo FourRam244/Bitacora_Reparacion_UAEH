@@ -281,7 +281,7 @@ class BitacoraMantenimiento:
         self.guardar_p_button = tk.Button(self.frame, text="Guardar Progreso", command=lambda: (self.guardar_datos(),self.save_option()))
         self.guardar_p_button.grid(row=34, column=0, columnspan=1, pady=10, sticky="sw")
         self.guardar_p_button.config(state=tk.DISABLED)
-        self.impr = tk.Button(self.frame, text="Imprimir Ticket", command=lambda: self.imprimir())
+        self.impr = tk.Button(self.frame, text="Imprimir Etiqueta", command=lambda: self.imprimir())
         self.impr.grid(row=34, column=1, columnspan=1, pady=10, sticky="w")
         
 

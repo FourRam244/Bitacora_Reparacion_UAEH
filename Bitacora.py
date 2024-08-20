@@ -13,6 +13,7 @@ from tkinter import simpledialog
 from openpyxl import load_workbook, Workbook
 
 # Importación de módulos para la generación de archivos PDF
+import textwrap
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
@@ -634,63 +635,40 @@ class BitacoraMantenimiento:
     
         
       
+
     def generar_ticket(self):
-        if self.reparado_var.get() == "No":  # Si no fue reparado
-        # Definir la función para guardar el motivo
+        if self.reparado_var.get() == "No":
             def guardar_motivo(otros_motivo_entry):
                 motivo = ""
                 for motivo_check, motivo_var in self.motivos_no_reparado:
                     if motivo_var.get():
                         motivo += motivo_check + ", "
                 otro_motivo = otros_motivo_entry.get()
-                if otro_motivo:
+                if (otro_motivo):
                     motivo += otro_motivo + ", "
-        
-                # Obtener el número de contador
+                
                 numero = self.contador_label.cget("text")
-        
-                # Nombre del archivo Excel
                 archivo_excel = "Bitacora_No_Reparados.xlsx"
-        
-                # Verificar si el archivo existe
+                
                 if not os.path.exists(archivo_excel):
-                    # Crear un nuevo archivo Excel si no existe
                     libro_excel = Workbook()
                     hoja_motivos = libro_excel.active
                     hoja_motivos.title = "Motivos_No_Reparado1"
                     hoja_motivos.append(["Numero", "Motivo"])
-        
-                    # Guardar el numero y el motivo en la hoja
                     hoja_motivos.append([numero, motivo])
-        
-                    # Guardar cambios en el archivo
                     libro_excel.save(archivo_excel)
                 else:
-                    # Abrir el archivo Excel existente
                     libro_excel = load_workbook(archivo_excel)
                     hoja_motivos = libro_excel.active
-        
-                    # Encontrar la última fila en la hoja
-                    last_row = hoja_motivos.max_row
-        
-                    # Guardar el numero y el motivo en la hoja
                     hoja_motivos.append([numero, motivo])
-        
-                    # Guardar cambios en el archivo
                     libro_excel.save(archivo_excel)
-        
-                # Mostrar mensaje de motivo guardado
+                
                 messagebox.showinfo("Motivo Guardado", f"El motivo por el cual no fue reparado es: {motivo}")
-        
-                # Cerrar la ventana del motivo
                 motivo_window.destroy()
                 selected_item = self.equipo_combobox.get()
-                # Generar el ticket
-                numero = self.contador_label.cget("text")
                 
-                ticket_pdf_path =  f"./Archivos/PDFs/{numero}.pdf"
+                ticket_pdf_path = f"./Archivos/PDFs/{numero}.pdf"
                 c = canvas.Canvas(ticket_pdf_path, pagesize=letter)
-                # Establecer la fuente en el lienzo
                 
                 c.drawString(200, 750, "Ticket Generado")
                 c.drawString(100, 730, "Número de folio: {}".format(numero))
@@ -705,7 +683,7 @@ class BitacoraMantenimiento:
                 c.drawString(100, 550, "Marca del Equipo: {}".format(self.marca_equipo_entry.get()))
                 c.drawString(100, 530, "Número de Serie: {}".format(self.no_serie_entry.get()))
                 c.drawString(100, 510, "Número de Inventario: {}".format(self.no_inventario_entry.get()))
-                falta_equipo= self.faltante_equipo_entry.get()
+                falta_equipo = self.faltante_equipo_entry.get()
                 c.drawString(200, 490, "Estado Equipo")
                 c.drawString(100, 470, "Enciende: {}".format("Sí" if self.estado_enciende.get() else "No"))
                 c.drawString(100, 450, "Falta algun componente: {}".format((falta_equipo) if self.estado_componente.get() else "No"))
@@ -713,10 +691,13 @@ class BitacoraMantenimiento:
                 c.drawString(100, 410, "Cable Alimentacion: {}".format("Sí" if self.estado_cable.get() else "No"))
                 c.drawString(100, 390, "Daño Botones/Perillas: {}".format("Sí" if self.estado_dano_botones.get() else "No"))
                 c.drawString(100, 370, "Daño Carcasa: {}".format("Sí" if self.estado_dano_carcasa.get() else "No"))
-                c.drawString(100, 350, "Descripcion detallada: {}".format(self.descripcion_detallada_entry.get("1.0", tk.END).strip()))
-                #c.drawString(200, 330, "Mantenimineto:")
                 
-                # Obtener los tipos de mantenimiento seleccionados
+                c.drawString(100, 350, "Descripción Detallada:")
+                descripcion_detallada = self.descripcion_detallada_entry.get("1.0", tk.END).strip()
+                y_pos = self.dibujar_texto_ajustado(c, descripcion_detallada, 100, 330)
+
+                c.drawString(100, y_pos - 20, "Tipos de Mantenimiento:")
+                y_pos -= 40
                 tipos_mantenimiento = []
                 if self.preventivo_var.get():
                     tipos_mantenimiento.append("Preventivo")
@@ -728,62 +709,63 @@ class BitacoraMantenimiento:
                     tipos_mantenimiento.append("Puesta en Marcha")
                 if self.otro_var.get():
                     tipos_mantenimiento.append("Otro")
-                
-                # Dibujar los tipos de mantenimiento en el PDF
+
                 tipos_mantenimiento_chunks = [tipos_mantenimiento[i:i+3] for i in range(0, len(tipos_mantenimiento), 3)]
                 for index, chunk in enumerate(tipos_mantenimiento_chunks):
-                    c.drawString(100, 330 - index * 20, "Tipos de Mantenimiento {}: {}".format(index+1, ", ".join(chunk)))
-                
-                c.drawString(100, 290, "Descripcion: {}".format(self.descripcion_entry.get("1.0", tk.END).strip()))
-                c.drawString(100, 270, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
-                c.drawString(200, 250, "Materiales Utilizados")
-                
-                # Obtener los materiales utilizados seleccionados
+                    c.drawString(100, y_pos, "{}".format(", ".join(chunk)))
+                    y_pos -= 20
+
+                c.drawString(100, y_pos - 20, "Descripción:")
+                descripcion = self.descripcion_entry.get("1.0", tk.END).strip()
+                y_pos = self.dibujar_texto_ajustado(c, descripcion, 100, y_pos - 40)
+
+                # Cambiar a la segunda página
+                c.showPage()
+                c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+
+                # Ajustar posición inicial para la segunda página
+                start_y = 700
+
+                c.drawString(100, start_y, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
+                start_y -= 20
+                c.drawString(100, start_y, "Materiales Utilizados")
+
                 otros_materiales = self.otros_materiales_entry.get()
                 materiales_utilizados = [nombre for nombre, var in self.materiales_utilizados if var.get()]
-                materiales_utilizados_completos = materiales_utilizados.copy()  # Copia la lista original
+                materiales_utilizados_completos = materiales_utilizados.copy()
                 if otros_materiales:
                     materiales_utilizados_completos.append(otros_materiales)
-                
-                # Dibujar los materiales utilizados en el PDF
+
                 materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
                 for index, chunk in enumerate(materiales_utilizados_chunks):
-                    c.drawString(100, 230 - index * 20, "Materiales Utilizados {}: {}".format(index+1, ", ".join(chunk)))
+                    c.drawString(100, start_y - (index * 20) - 20, "Materiales Utilizados {}: {}".format(index + 1, ", ".join(chunk)))
                 
-                c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
-                c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
-                c.drawString(100, 150, "Correo: {}".format(self.correo_entry.get()))
-                c.drawString(100, 125, "Firma Responsable Taller: ")
-                c.drawString(390, 125, "Firma Responsable Equipo: ")
-                
-                c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
-                
-                c.drawImage("firma_Taller.png", 80, 50, width=120, height=70, mask='auto')
-                c.drawImage("firma_Equipo.png", 390, 50, width=120, height=70, mask='auto')
-                
-                # Determinar la posición inicial en la segunda página
-                y_start = 750  # Ajusta esta coordenada según tus necesidades
+                start_y -= (len(materiales_utilizados_chunks) * 20) + 40
+                c.drawString(100, start_y, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
+                start_y -= 20
+                c.drawString(100, start_y, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
+                start_y -= 20
+                c.drawString(100, start_y, "Correo: {}".format(self.correo_entry.get()))
+                start_y -= 20
+                c.drawString(100, start_y, "Firma Responsable Taller: ")
+                c.drawString(390, start_y, "Firma Responsable Equipo: ")
 
-                # Dibujar encabezado de la segunda página
-                c.showPage()  # Cambiar a la segunda página del PDF
-                c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
-                
-
-                # Ajustar la posición vertical para los datos adicionales
-                y = y_start - 50  # Ajusta esta cantidad según tus necesidades
-
+                c.drawImage("firma_Taller.png", 80, start_y - 80, width=120, height=70, mask='auto')
+                c.drawImage("firma_Equipo.png", 390, start_y - 80, width=120, height=70, mask='auto')
+ 
                 # Dibujar los datos adicionales en la segunda página
-                c.drawString(100, y, "Motivo por el cual no fue reparado:")
-                y -= 20  # Ajusta esta cantidad según tus necesidades
+                start_y -= 100
+                c.drawString(100, start_y, "Motivo por el cual no fue reparado:")
+                start_y -= 20
 
                 # Dibujar los checkboxes de motivo por el cual no fue reparado
                 for motivo_check, motivo_var in self.motivos_no_reparado:
                     if motivo_var.get():
                         
-                        c.drawString(120, y, motivo_check)
+                        c.drawString(120, start_y, motivo_check)
                         
-                        y -= 20  # Ajusta esta cantidad según tus necesidades
-                c.drawString(120, y, otro_motivo)
+                        start_y -= 20
+                c.drawString(120, start_y, otro_motivo)
                 c.save()
                 messagebox.showinfo("Ticket", "Se ha generado el ticket.")
                 self.ticket_presionado = True
@@ -825,15 +807,11 @@ class BitacoraMantenimiento:
     
             # Mostrar ventana de motivo
             motivo_window.mainloop()
-    
+
         else:
-            selected_item = self.equipo_combobox.get()
-            # Generar el ticket
             numero = self.contador_label.cget("text")
-            
-            ticket_pdf_path =  f"./Archivos/PDFs/{numero}.pdf"
+            ticket_pdf_path = f"./Archivos/PDFs/{numero}.pdf"
             c = canvas.Canvas(ticket_pdf_path, pagesize=letter)
-            # Establecer la fuente en el lienzo
             
             c.drawString(200, 750, "Ticket Generado")
             c.drawString(100, 730, "Número de folio: {}".format(numero))
@@ -842,13 +820,13 @@ class BitacoraMantenimiento:
             c.drawString(100, 670, "Nombre del Responsable: {}".format(self.nombre_responsable_entry.get()))
             c.drawString(100, 650, "Teléfono del Responsable: {}".format(self.telefono_responsable_entry.get()))
             c.drawString(100, 630, "Área del Responsable: {}".format(self.area_responsable_entry.get()))
-            c.drawString(100, 610, "Equipo: {}".format(selected_item))
+            c.drawString(100, 610, "Equipo: {}".format(self.equipo_combobox.get()))
             c.drawString(100, 590, "Otro Equipo: {}".format(self.otro_equipo_entry.get()))
             c.drawString(100, 570, "Modelo del Equipo: {}".format(self.modelo_equipo_entry.get()))
             c.drawString(100, 550, "Marca del Equipo: {}".format(self.marca_equipo_entry.get()))
             c.drawString(100, 530, "Número de Serie: {}".format(self.no_serie_entry.get()))
             c.drawString(100, 510, "Número de Inventario: {}".format(self.no_inventario_entry.get()))
-            falta_equipo= self.faltante_equipo_entry.get()
+            falta_equipo = self.faltante_equipo_entry.get()
             c.drawString(200, 490, "Estado Equipo")
             c.drawString(100, 470, "Enciende: {}".format("Sí" if self.estado_enciende.get() else "No"))
             c.drawString(100, 450, "Falta algun componente: {}".format((falta_equipo) if self.estado_componente.get() else "No"))
@@ -856,10 +834,13 @@ class BitacoraMantenimiento:
             c.drawString(100, 410, "Cable Alimentacion: {}".format("Sí" if self.estado_cable.get() else "No"))
             c.drawString(100, 390, "Daño Botones/Perillas: {}".format("Sí" if self.estado_dano_botones.get() else "No"))
             c.drawString(100, 370, "Daño Carcasa: {}".format("Sí" if self.estado_dano_carcasa.get() else "No"))
-            c.drawString(100, 350, "Descripcion detallada: {}".format(self.descripcion_detallada_entry.get("1.0", tk.END).strip()))
-            #c.drawString(200, 330, "Mantenimineto:")
             
-            # Obtener los tipos de mantenimiento seleccionados
+            c.drawString(100, 350, "Descripción Detallada:")
+            descripcion_detallada = self.descripcion_detallada_entry.get("1.0", tk.END).strip()
+            y_pos = self.dibujar_texto_ajustado(c, descripcion_detallada, 100, 330)
+
+            c.drawString(100, y_pos - 20, "Tipos de Mantenimiento:")
+            y_pos -= 40
             tipos_mantenimiento = []
             if self.preventivo_var.get():
                 tipos_mantenimiento.append("Preventivo")
@@ -871,46 +852,79 @@ class BitacoraMantenimiento:
                 tipos_mantenimiento.append("Puesta en Marcha")
             if self.otro_var.get():
                 tipos_mantenimiento.append("Otro")
-            
-            # Dibujar los tipos de mantenimiento en el PDF
+
             tipos_mantenimiento_chunks = [tipos_mantenimiento[i:i+3] for i in range(0, len(tipos_mantenimiento), 3)]
             for index, chunk in enumerate(tipos_mantenimiento_chunks):
-                c.drawString(100, 330 - index * 20, "Tipos de Mantenimiento {}: {}".format(index+1, ", ".join(chunk)))
-            
-            c.drawString(100, 290, "Descripcion: {}".format(self.descripcion_entry.get("1.0", tk.END).strip()))
-            c.drawString(100, 270, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
-            c.drawString(200, 250, "Materiales Utilizados")
-            
-            # Obtener los materiales utilizados seleccionados
+                c.drawString(100, y_pos, "{}".format(", ".join(chunk)))
+                y_pos -= 20
+
+            c.drawString(100, y_pos - 20, "Descripción:")
+            descripcion = self.descripcion_entry.get("1.0", tk.END).strip()
+            y_pos = self.dibujar_texto_ajustado(c, descripcion, 100, y_pos - 40)
+
+            c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+            # Cambiar a la segunda página
+            c.showPage()
+            c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+
+            # Ajustar posición inicial para la segunda página
+            start_y = 700
+
+            c.drawString(100, start_y, "¿Fue Reparado?: {}".format(self.reparado_var.get()))
+            start_y -= 20
+            c.drawString(100, start_y, "Materiales Utilizados")
+
             otros_materiales = self.otros_materiales_entry.get()
             materiales_utilizados = [nombre for nombre, var in self.materiales_utilizados if var.get()]
-            materiales_utilizados_completos = materiales_utilizados.copy()  # Copia la lista original
+            materiales_utilizados_completos = materiales_utilizados.copy()
             if otros_materiales:
                 materiales_utilizados_completos.append(otros_materiales)
-            
-            # Dibujar los materiales utilizados en el PDF
+
             materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
             for index, chunk in enumerate(materiales_utilizados_chunks):
-                c.drawString(100, 230 - index * 20, "Materiales Utilizados {}: {}".format(index+1, ", ".join(chunk)))
+                c.drawString(100, start_y - (index * 20) - 20, "Materiales Utilizados {}: {}".format(index + 1, ", ".join(chunk)))
             
-            c.drawString(100, 190, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
-            c.drawString(100, 170, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
-            c.drawString(100, 150, "Correo: {}".format(self.correo_entry.get()))
-            c.drawString(100, 125, "Firma Responsable Taller: ")
-            c.drawString(390, 125, "Firma Responsable Equipo: ")
-            
-            c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
-            
-            c.drawImage("firma_Taller.png", 80, 50, width=120, height=70, mask='auto')
-            c.drawImage("firma_Equipo.png", 390, 50, width=120, height=70, mask='auto')
-         
+            start_y -= (len(materiales_utilizados_chunks) * 20) + 40
+            c.drawString(100, start_y, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
+            start_y -= 20
+            c.drawString(100, start_y, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
+            start_y -= 20
+            c.drawString(100, start_y, "Correo: {}".format(self.correo_entry.get()))
+            start_y -= 20
+            c.drawString(100, start_y, "Firma Responsable Taller: ")
+            c.drawString(390, start_y, "Firma Responsable Equipo: ")
+
+            c.drawImage("firma_Taller.png", 80, start_y - 80, width=120, height=70, mask='auto')
+            c.drawImage("firma_Equipo.png", 390, start_y - 80, width=120, height=70, mask='auto')
+
             c.save()
+
             messagebox.showinfo("Ticket", "Se ha generado el ticket.")
             self.ticket_presionado = True
-            # Habilitar el botón de guardar
             self.generar_ticket_button.config(state="disabled")
             self.correo_button.config(state="normal")
 
+    def dibujar_texto_ajustado(self, canvas, texto, x, y):
+        max_width = letter[0] - 2 * x
+        lines = []
+        words = texto.split()
+        line = ""
+        
+        for word in words:
+            test_line = f"{line} {word}".strip()
+            if canvas.stringWidth(test_line) <= max_width:
+                line = test_line
+            else:
+                lines.append(line)
+                line = word
+        
+        if line:
+            lines.append(line)
+        
+        for index, line in enumerate(lines):
+            canvas.drawString(x, y - index * 20, line)
+        
+        return y - (len(lines) * 20)
             
     def guardar_datos(self, event=None):
         # Obtener el equipo seleccionado en el combobox
