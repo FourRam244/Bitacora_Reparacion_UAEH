@@ -15,6 +15,16 @@ import win32print
 import win32ui
 from PIL import Image, ImageWin
 
+# Importación de módulos para el manejo de archivos Excel
+from openpyxl import load_workbook, Workbook
+
+
+# Importación de módulos para la generación de archivos PDF
+import textwrap
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+
 # Importación del módulo 'os' para operaciones del sistema
 import os
 # Importar el módulo fitz de PyMuPDF
@@ -283,6 +293,9 @@ class BitacoraMantenimiento:
         self.guardar_p_button.config(state=tk.DISABLED)
         self.impr = tk.Button(self.frame, text="Imprimir Etiqueta", command=lambda: self.imprimir())
         self.impr.grid(row=34, column=1, columnspan=1, pady=10, sticky="w")
+        self.impr.config(state=tk.DISABLED)
+        self.pdf = tk.Button(self.frame, text="Generar PDF", command=lambda: self.generar_ticket())
+        self.pdf.grid(row=34, column=2, columnspan=1, pady=10, sticky="w")
         
 
 
@@ -317,9 +330,117 @@ class BitacoraMantenimiento:
             self.otro_equipo_entry.config(state="normal")  # Activar la caja de texto "otro_equipo"
         else:
             self.otro_equipo_entry.config(state="disabled")  # Desactivar la caja de texto "otro_equipo"
+            
+    def guardar_excel(self):
+        # Obtener los datos de los campos de entrada
+        numero = self.contador_label.cget("text")
+        fecha_recepcion = self.fecha_recepcion_entry.get_date()
+        fecha_entrega = self.fecha_entrega_entry.get_date()
+        nombre_responsable = self.nombre_responsable_entry.get()
+        telefono_responsable = self.telefono_responsable_entry.get()
+        area_responsable = self.area_responsable_entry.get()
+        correo= self.autocomplete_entry.get()
+        descripcion_equipo = self.equipo_combobox.get()
+        otro_equipo = self.otro_equipo_entry.get() if descripcion_equipo == "Otros" else ""
+        falta_equipo = self.faltante_equipo_entry.get()
+        modelo_equipo = self.modelo_equipo_entry.get()
+        marca_equipo = self.marca_equipo_entry.get()
+        no_serie = self.no_serie_entry.get()
+        no_inventario = self.no_inventario_entry.get()
+        descripcion_detallada = self.descripcion_detallada_entry.get("1.0", tk.END).strip()  # Obtener todo el texto
+    
+        # Abrir el archivo de Excel existente o crear uno nuevo
+        try:
+            libro_excel = load_workbook("Altas.xlsx")
+            hoja_activa = libro_excel.active
+        except FileNotFoundError:
+            libro_excel = Workbook()
+            hoja_activa = libro_excel.active
+            # Si el archivo no existe, crear encabezados
+            encabezados = ["No.", "Fecha de Recepción", "Fecha de Entrega", "Nombre del Responsable", "Teléfono del Responsable",
+                           "Área del Responsable", "Correo", "Equipo", "Modelo", "Marca", "No.Serie", "No.Inventario",
+                           "Enciende", "Cable de Alimentación",
+                           "Falta algún componente", "Daño en botones/perillas",
+                           "Presenta corrosión/oxidación", "Daño en Carcasa",
+                           "Descripción Detallada"]
+            hoja_activa.append(encabezados)
+    
+        # Encontrar la primera fila vacía
+        fila_vacia = hoja_activa.max_row + 1
+    
+        # Escribir los datos en la fila vacía
+        hoja_activa.cell(row=fila_vacia, column=1).value = numero
+        hoja_activa.cell(row=fila_vacia, column=2).value = fecha_recepcion
+        hoja_activa.cell(row=fila_vacia, column=3).value = fecha_entrega
+        hoja_activa.cell(row=fila_vacia, column=4).value = nombre_responsable
+        hoja_activa.cell(row=fila_vacia, column=5).value = telefono_responsable
+        hoja_activa.cell(row=fila_vacia, column=6).value = area_responsable
+        hoja_activa.cell(row=fila_vacia, column=7).value = correo
+        hoja_activa.cell(row=fila_vacia, column=8).value = otro_equipo if descripcion_equipo == "Otros" else descripcion_equipo
+    
+        hoja_activa.cell(row=fila_vacia, column=9).value = modelo_equipo
+        hoja_activa.cell(row=fila_vacia, column=10).value = marca_equipo
+        hoja_activa.cell(row=fila_vacia, column=11).value = no_serie
+        hoja_activa.cell(row=fila_vacia, column=12).value = no_inventario
+        hoja_activa.cell(row=fila_vacia, column=13).value = "Sí" if self.estado_enciende.get() else "No"
+        hoja_activa.cell(row=fila_vacia, column=14).value = "Sí" if self.estado_cable.get() else "No"
+        hoja_activa.cell(row=fila_vacia, column=15).value = "Sí, {}".format(falta_equipo) if self.estado_componente.get() else "No"
+        hoja_activa.cell(row=fila_vacia, column=16).value = "Sí" if self.estado_dano_botones.get() else "No"
+        hoja_activa.cell(row=fila_vacia, column=17).value = "Sí" if self.estado_corrosion.get() else "No"
+        hoja_activa.cell(row=fila_vacia, column=18).value = "Sí" if self.estado_dano_carcasa.get() else "No"
+        hoja_activa.cell(row=fila_vacia, column=19).value = descripcion_detallada
+
+        # Guardar cambios en el archivo
+        libro_excel.save("Altas.xlsx")
+
+        # Mostrar mensaje de éxito
+        messagebox.showinfo("Bitácora Guardada", "Los datos de la bitácora se han guardado correctamente.")
+        
+
+            
+    def generar_ticket(self):
+        numero = self.contador_label.cget("text")
+        ticket_pdf_path = f"./Archivos/Altas/{numero}.pdf"
+        c = canvas.Canvas(ticket_pdf_path, pagesize=letter)
+        
+        c.drawString(200, 750, "Ticket Alta")
+        c.drawString(100, 730, "Número de folio: {}".format(numero))
+        c.drawString(100, 710, "Fecha de Recepcion: {}".format(self.fecha_recepcion_entry.get()))
+        c.drawString(100, 690, "Fecha de Entrega: {}".format(self.fecha_entrega_entry.get()))
+        c.drawString(100, 670, "Nombre del Responsable: {}".format(self.nombre_responsable_entry.get()))
+        c.drawString(100, 650, "Teléfono del Responsable: {}".format(self.telefono_responsable_entry.get()))
+        c.drawString(100, 630, "Área del Responsable: {}".format(self.area_responsable_entry.get()))
+        c.drawString(100, 610, "Equipo: {}".format(self.equipo_combobox.get()))
+        c.drawString(100, 590, "Otro Equipo: {}".format(self.otro_equipo_entry.get()))
+        c.drawString(100, 570, "Modelo del Equipo: {}".format(self.modelo_equipo_entry.get()))
+        c.drawString(100, 550, "Marca del Equipo: {}".format(self.marca_equipo_entry.get()))
+        c.drawString(100, 530, "Número de Serie: {}".format(self.no_serie_entry.get()))
+        c.drawString(100, 510, "Número de Inventario: {}".format(self.no_inventario_entry.get()))
+        falta_equipo = self.faltante_equipo_entry.get()
+        c.drawString(200, 490, "Estado Equipo")
+        c.drawString(100, 470, "Enciende: {}".format("Sí" if self.estado_enciende.get() else "No"))
+        c.drawString(100, 450, "Falta algun componente: {}".format((falta_equipo) if self.estado_componente.get() else "No"))
+        c.drawString(100, 430, "Presenta Corrosion/Oxidacion: {}".format("Sí" if self.estado_corrosion.get() else "No"))
+        c.drawString(100, 410, "Cable Alimentacion: {}".format("Sí" if self.estado_cable.get() else "No"))
+        c.drawString(100, 390, "Daño Botones/Perillas: {}".format("Sí" if self.estado_dano_botones.get() else "No"))
+        c.drawString(100, 370, "Daño Carcasa: {}".format("Sí" if self.estado_dano_carcasa.get() else "No"))
+        c.drawString(100, 350, "Correo: {}".format(self.autocomplete_entry.get()))
+        c.drawString(100, 330, "Descripción Detallada:")
+        descripcion_detallada = self.descripcion_detallada_entry.get("1.0", tk.END).strip()
+        y_pos = self.dibujar_texto_ajustado(c, descripcion_detallada, 100, 310)
+        y_pos -= 40
+        
+        c.drawImage("./img/logo1.png", letter[0] - 120, letter[1] - 70, width=100, height=50, mask='auto')
+        c.save()
+        self.guardar_excel()
+        self.impr.config(state=tk.NORMAL)
+        self.pdf.config(state=tk.DISABLED)
+        messagebox.showinfo("Generar PDF", "PDF Guardado Correctamente")
+        
     
     def imprimir(self):
         self.activar_guardar_progreso()
+        self.impr.config(state=tk.DISABLED)
         # Dimensiones de la imagen (2x1 pulgadas)
         ancho = (144 * 2)*12
         alto = (144 * 1)*12
@@ -427,7 +548,28 @@ class BitacoraMantenimiento:
         hDC.EndPage()
         hDC.EndDoc()
         hDC.DeleteDC()
+
+    def dibujar_texto_ajustado(self, canvas, texto, x, y):
+        max_width = letter[0] - 2 * x
+        lines = []
+        words = texto.split()
+        line = ""
         
+        for word in words:
+            test_line = f"{line} {word}".strip()
+            if canvas.stringWidth(test_line) <= max_width:
+                line = test_line
+            else:
+                lines.append(line)
+                line = word
+        
+        if line:
+            lines.append(line)
+        
+        for index, line in enumerate(lines):
+            canvas.drawString(x, y - index * 20, line)
+        
+        return y - (len(lines) * 20)
     
     def activar_guardar_progreso(self):
         # Activar el botón Guardar Progreso
@@ -511,11 +653,15 @@ class BitacoraMantenimiento:
         numero = self.numero_guardado
         with open(f"./Archivos/Progresos/{numero}.json", "w") as f:
             json.dump(datos, f)
+            
             messagebox.showinfo("Guardar Progreso", "Progreso Guardado Correctamente")
             self.limpiar_campos()
             self.numero_guardado += 1
             self.guardar_numero(self.numero_guardado)
             self.contador_label.config(text=f"{self.numero_guardado}") 
+            self.pdf.config(state=tk.NORMAL)
+            self.guardar_p_button.config(state=tk.DISABLED)
+            
 
     def cargar_numero(self):
     # Intentar cargar el número guardado desde el archivo

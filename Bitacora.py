@@ -354,31 +354,53 @@ class BitacoraMantenimiento:
           
                 # Responsable de Taller
         tk.Label(self.frame, text="Responsable de Taller:").grid(row=32, column=0, sticky="e")
+        # Lista de responsables
+        responsable_taller_options = [
+            "Juan Daniel Ramírez Zamora", "Jose Manuel Fernandez Ramírez",
+            "Jovani Ortega Ventura", "José Daniel Meneses González",
+            "Elizabeth Valdés Rincón", "Jhonatan Victorino Aguilar",
+            "Ernesto Morales Téllez", "Leonardo A. Martínez Rivera"
+        ]
+
+        # Crear un diccionario para almacenar los estados de los checkboxes
+        self.responsable_vars = {}
+
+        # Agregar Checkbuttons en dos columnas (4 por cada columna)
+        for index, responsable in enumerate(responsable_taller_options):
+            var = tk.BooleanVar()
+            
+            # Posicionamiento en columnas: columna izquierda (0) para los primeros 4 elementos,
+            # columna derecha (1) para los siguientes 4 elementos
+            col = 1 if index < 4 else 2
+            row = 32 + index if index < 4 else 32 + (index - 4)
+
+            checkbox = tk.Checkbutton(self.frame, text=responsable, variable=var, command=self.update_responsable_taller_var)
+            checkbox.grid(row=row, column=col, sticky="w")
+            
+            self.responsable_vars[responsable] = var
+
+        # Variable para almacenar los responsables seleccionados en formato string
         self.responsable_taller_var = tk.StringVar()
-        responsable_taller_options = ["Juan Daniel Ramírez Zamora", "Jose Manuel Fernandez Ramírez", "Otro"]
-        self.responsable_taller_dropdown = tk.OptionMenu(self.frame, self.responsable_taller_var, *responsable_taller_options)
-        self.responsable_taller_dropdown.grid(row=32, column=1, columnspan=2, sticky="w")
+        self.update_responsable_taller_var()  # Inicializa la variable con el valor actual
         
-        
-        
-        # Cajas de texto para Responsable equipo Recepción
-        
-        t2=tk.Label(self.frame, text="¿Recoge la misma persona?").grid(row=32, column=2, sticky="w")
+
+        # Cajas de texto para Responsable equipo Recepción  
+        t2=tk.Label(self.frame, text="¿Recoge la misma persona?").grid(row=37, column=2, sticky="w")
         self.recep_var = tk.StringVar()
         recep_options = ["Si", "No"]
         self.recep_dropdown = tk.OptionMenu(self.frame, self.recep_var, *recep_options,command=self.toggle_recibir)
-        self.recep_dropdown.grid(row=33, column=2, columnspan=2, sticky="w")
+        self.recep_dropdown.grid(row=37, column=3, columnspan=2, sticky="w")
         
         
-        tk.Label(self.frame, text="Responsable equipo Recepción:").grid(row=33, column=0, sticky="e")
+        tk.Label(self.frame, text="Responsable equipo Recepción:").grid(row=37, column=0, sticky="e")
         self.responsable_recepcion_entry = tk.Entry(self.frame)
-        self.responsable_recepcion_entry.grid(row=33, column=1, columnspan=2, sticky="w")
+        self.responsable_recepcion_entry.grid(row=37, column=1, columnspan=2, sticky="w")
         self.responsable_recepcion_entry.config(state="disabled")
         
 
        
         # Definir la fila para los botones
-        fila_botones = 34
+        fila_botones = 38
         
         # Ajustar el ancho de cada columna
         self.frame.grid_columnconfigure((0, 1, 2, 3, 4, 5, 6), weight=1, uniform="equal")
@@ -399,16 +421,16 @@ class BitacoraMantenimiento:
                
         # Botón para generar ticket
         self.generar_ticket_button = tk.Button(self.frame, text="Generar Ticket", command=lambda: self.generar_ticket())
-        self.generar_ticket_button.grid(row=35, column=1, padx=3, pady=10, sticky="ew")
+        self.generar_ticket_button.grid(row=39, column=1, padx=3, pady=10, sticky="ew")
         # Botón para generar ticket
         self.correo_button = tk.Button(self.frame, text="Mandar Correo", command=self.mandar_correo)
-        self.correo_button.grid(row=35, column=2, padx=3, pady=10, sticky="ew")
+        self.correo_button.grid(row=39, column=2, padx=3, pady=10, sticky="ew")
         #Boton abrir vetana firma A
         self.firma_taller = tk.Button(self.frame, text="Firma Responsable Taller", command=lambda: self.open_signature_app("Taller"))
-        self.firma_taller.grid(row=34, column=3, padx=4, pady=10, sticky="ew")
+        self.firma_taller.grid(row=38, column=3, padx=4, pady=10, sticky="ew")
         #boton abririr ventan firma B
         self.firma_equipo = tk.Button(self.frame, text="Firma Responsable Equipo", command=lambda: self.open_signature_app("Equipo"))
-        self.firma_equipo.grid(row=35, column=3, padx=4, pady=10, sticky="ew")
+        self.firma_equipo.grid(row=39, column=3, padx=4, pady=10, sticky="ew")
 
         # Variable de control para el botón de ticket
         self.ticket_presionado = False
@@ -434,7 +456,13 @@ class BitacoraMantenimiento:
             self.firma_taller.config(state="disable")
             self.generar_ticket_button.config(state="normal")
             
-        
+            
+    def update_responsable_taller_var(self):
+        """Actualiza la variable 'responsable_taller_var' con los responsables seleccionados."""
+        seleccionados = [resp for resp, var in self.responsable_vars.items() if var.get()]
+        self.responsable_taller_var.set(", ".join(seleccionados))
+                  
+            
     def generar_graficas(self):
         # Paso 1: Leer el archivo Excel
         df = pd.read_excel('bitacora_mantenimiento.xlsx')
@@ -538,7 +566,7 @@ class BitacoraMantenimiento:
             mensaje['Subject'] = "Correo electrónico con archivo adjunto"
 
             # Añadir el cuerpo del mensaje
-            cuerpo = "Estimad@ Usuari@ \nAdjunto a este correo electrónico, se envía el documento que certifica el mantenimiento preventivo, correctivo o fabricación realizado en su equipo o pieza por el Taller de Reparaciones de la Unidad Central de Laboratorios.\nSaludos cordiales \nEn caso de cualquier duda o aclaración contactarse a:\nreparaciones_ucl@uaeh.edu.mx \no a la ext.: 13224"
+            cuerpo = "Estimad@ Usuari@ \nAdjunto a este correo electrónico, se envía el documento que certifica el mantenimiento preventivo, correctivo o fabricación realizado en su equipo o pieza por el Taller de Reparaciones de la Unidad Central de Laboratorios.\nSaludos cordiales \nEn caso de cualquier duda o aclaración contactarse a:reparaciones_ucl@uaeh.edu.mx \no a la ext.: 13224 \nEn el TRE, nos preocupamos por brindar el mejor servicio posible, y tu opinión es fundamental para nosotros. Por eso, te invitamos a participar en nuestra encuesta de satisfacción sobre el servicio de mantenimiento y reparación de equipos. \nTu feedback nos ayudará a mejorar y seguir ofreciendo un servicio de calidad. La encuesta solo te llevará unos minutos y tus respuestas son anónimas. \n¡Tu opinión cuenta! Accede a la encuesta aquí: https://forms.gle/Hx7VmvcFRtYF7HhaA \n¡Muchas gracias por tu colaboración!"
             mensaje.attach(email.mime.text.MIMEText(cuerpo, 'plain'))
 
             # Añadir el archivo como adjunto
@@ -736,14 +764,28 @@ class BitacoraMantenimiento:
                 if otros_materiales:
                     materiales_utilizados_completos.append(otros_materiales)
 
-                materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
+                materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+2] for i in range(0, len(materiales_utilizados_completos), 2)]
                 for index, chunk in enumerate(materiales_utilizados_chunks):
                     c.drawString(100, start_y - (index * 20) - 20, "Materiales Utilizados {}: {}".format(index + 1, ", ".join(chunk)))
                 
                 start_y -= (len(materiales_utilizados_chunks) * 20) + 40
-                c.drawString(100, start_y, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
+                # Obtener los responsables seleccionados y dividirlos en líneas si hay más de dos
+                responsables_seleccionados = self.responsable_taller_var.get().split(", ")
+                max_responsables_por_linea = 2
+                
+                # Crear grupos de responsables con un máximo de 2 por línea
+                responsables_chunks = [responsables_seleccionados[i:i + max_responsables_por_linea] for i in range(0, len(responsables_seleccionados), max_responsables_por_linea)]
+                
+                # Dibujar cada grupo de responsables en una línea separada
+                c.drawString(100, start_y, "Responsable Taller:")
                 start_y -= 20
-                c.drawString(100, start_y, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
+                
+                for chunk in responsables_chunks:
+                    c.drawString(100, start_y, ", ".join(chunk))
+                    start_y -= 20
+                
+                # Continuar con la siguiente información en el PDF
+                c.drawString(100, start_y, "Responsable Recepción: {}".format(self.responsable_recepcion_entry.get()))
                 start_y -= 20
                 c.drawString(100, start_y, "Correo: {}".format(self.correo_entry.get()))
                 start_y -= 20
@@ -862,10 +904,10 @@ class BitacoraMantenimiento:
             descripcion = self.descripcion_entry.get("1.0", tk.END).strip()
             y_pos = self.dibujar_texto_ajustado(c, descripcion, 100, y_pos - 40)
 
-            c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+            c.drawImage("./img/logo1.png", letter[0] - 120, letter[1] - 70, width=100, height=50, mask='auto')
             # Cambiar a la segunda página
             c.showPage()
-            c.drawImage("./img/logo1.png", letter[0] - 100, letter[1] - 70, width=100, height=50, mask='auto')
+            c.drawImage("./img/logo1.png", letter[0] - 120, letter[1] - 70, width=100, height=50, mask='auto')
 
             # Ajustar posición inicial para la segunda página
             start_y = 700
@@ -880,13 +922,26 @@ class BitacoraMantenimiento:
             if otros_materiales:
                 materiales_utilizados_completos.append(otros_materiales)
 
-            materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+3] for i in range(0, len(materiales_utilizados_completos), 3)]
+            materiales_utilizados_chunks = [materiales_utilizados_completos[i:i+2] for i in range(0, len(materiales_utilizados_completos), 2)]
             for index, chunk in enumerate(materiales_utilizados_chunks):
                 c.drawString(100, start_y - (index * 20) - 20, "Materiales Utilizados {}: {}".format(index + 1, ", ".join(chunk)))
             
             start_y -= (len(materiales_utilizados_chunks) * 20) + 40
-            c.drawString(100, start_y, "Responsable Taller: {}".format(self.responsable_taller_var.get()))
+            # Obtener los responsables seleccionados y dividirlos en líneas si hay más de dos
+            responsables_seleccionados = self.responsable_taller_var.get().split(", ")
+            max_responsables_por_linea = 2
+            
+            # Crear grupos de responsables con un máximo de 2 por línea
+            responsables_chunks = [responsables_seleccionados[i:i + max_responsables_por_linea] for i in range(0, len(responsables_seleccionados), max_responsables_por_linea)]
+            
+            # Dibujar cada grupo de responsables en una línea separada
+            c.drawString(100, start_y, "Responsable Taller:")
             start_y -= 20
+            
+            for chunk in responsables_chunks:
+                c.drawString(100, start_y, ", ".join(chunk))
+                start_y -= 20
+            
             c.drawString(100, start_y, "Responsable Recepcion: {}".format(self.responsable_recepcion_entry.get()))
             start_y -= 20
             c.drawString(100, start_y, "Correo: {}".format(self.correo_entry.get()))
